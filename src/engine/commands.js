@@ -30,6 +30,8 @@ const HELP_LINES = [
   '  levels               open level browser',
   '  sandbox              free-play mode',
   '  clear                clear console log',
+  '  lesson NAME          print a theory pack (asymptotics|recurrences|sorting|…)',
+  '  quiz NAME            analysis quiz bank for that topic',
   '',
   'data',
   '  array random [n]     random array (default 12)',
@@ -39,10 +41,17 @@ const HELP_LINES = [
   '  graph load NAME      star | cycle | grid | diamond',
   '',
   'algorithms',
-  '  set sort NAME        bubble|selection|insertion|merge|quick|heap',
-  '  set search NAME      linear|binary',
-  '  set graph NAME       bfs|dfs|dijkstra|prim|kruskal',
-  '  set dp NAME          fib|coin|lcs|knapsack',
+  '  set sort NAME        bubble|selection|insertion|merge|quick|heap|counting|radix|bucket',
+  '  set search NAME      linear|binary|select',
+  '  set graph NAME       bfs|dfs|dijkstra|prim|kruskal|bellman|floyd|topo',
+  '  set dp NAME          fib|coin|lcs|knapsack|rod|chain',
+  '  set ds NAME          bst|bst-search|heap|uf|hash',
+  '  set greedy NAME      activity|huffman',
+  '  set string NAME      kmp|rk',
+  '  set flow ek          Edmonds-Karp max-flow',
+  '  set np NAME          sat-3sat|3sat-clique|clique-vc',
+  '  set dc NAME          closest|master',
+  '  set theory master   Master Theorem',
   '  run                  generate steps for current setup',
   '',
   'manual (levels / golf)',
@@ -50,15 +59,15 @@ const HELP_LINES = [
   '  swap i j             swap two cells',
   '  probe mid            binary-search probe at index',
   '  lo mid+1 | hi mid-1  shrink search window',
-  '  visit ID             mark graph node visited (BFS/DFS golf)',
-  '  relax u v            Dijkstra-style relax edge',
+  '  visit ID             mark node visited',
   '  pick u v             add edge to MST',
+  '  insert KEY           BST insert',
+  '  answer Q CHOICE      analysis quiz (a|b|c|d|e)',
   '',
   'transport / meta',
   '  step | play | pause | speed N | reset | undo',
   '  next | prev          frame navigation (auto runs)',
   '  golf                 show move count vs par',
-  '  build level          (stub) export current challenge JSON',
 ];
 
 /**
@@ -177,7 +186,17 @@ export function dispatch(ctx, raw) {
     case 'drop':
     case 'setdp':
     case 'answer':
+    case 'insert':
+    case 'bst':
       app.playerMove(name, args);
+      return;
+
+    case 'lesson':
+      app.showLesson((args[0] || '').toLowerCase() || 'asymptotics');
+      return;
+
+    case 'quiz':
+      app.showLessonQuiz((args[0] || '').toLowerCase() || 'asymptotics');
       return;
 
     default:
@@ -240,22 +259,36 @@ function handleSet(ctx, args) {
   const domain = (args[0] || '').toLowerCase();
   const name = (args[1] || '').toLowerCase();
   const map = {
-    sort: ['bubble', 'selection', 'insertion', 'merge', 'quick', 'heap'],
-    search: ['linear', 'binary'],
-    graph: ['bfs', 'dfs', 'dijkstra', 'prim', 'kruskal'],
-    dp: ['fib', 'coin', 'lcs', 'knapsack'],
+    sort: ['bubble', 'selection', 'insertion', 'merge', 'quick', 'heap', 'counting', 'radix', 'bucket'],
+    search: ['linear', 'binary', 'select'],
+    graph: ['bfs', 'dfs', 'dijkstra', 'prim', 'kruskal', 'bellman', 'floyd', 'topo'],
+    dp: ['fib', 'coin', 'lcs', 'knapsack', 'rod', 'chain'],
+    ds: ['bst', 'bst-insert', 'bst-search', 'heap', 'uf', 'hash'],
+    greedy: ['activity', 'huffman'],
+    string: ['kmp', 'rk'],
+    flow: ['flow', 'ek'],
+    np: ['sat-3sat', '3sat-clique', 'clique-vc'],
+    dc: ['closest', 'master', 'karatsuba'],
+    theory: ['master', 'asymptotics', 'recurrences'],
   };
   if (!map[domain] || !map[domain].includes(name)) {
     ctx.log(`usage: set ${domain} ${map[domain] ? map[domain].join('|') : '…'}`, 'err');
     return;
   }
-  ctx.state.algo = name;
+  ctx.state.algo = name === 'flow' || name === 'ek' ? 'ek' : name;
   ctx.state.mode = domain;
-  if (domain === 'sort') ctx.state.kind = 'array';
-  if (domain === 'search') ctx.state.kind = 'array';
+  if (domain === 'sort' || domain === 'search') ctx.state.kind = 'array';
   if (domain === 'graph') ctx.state.kind = 'graph';
   if (domain === 'dp') ctx.state.kind = 'matrix';
-  ctx.log(`set ${domain} → ${name}`, 'ok');
+  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory') {
+    ctx.state.kind = 'tree';
+  }
+  if (domain === 'flow') {
+    ctx.state.kind = 'graph';
+    ctx.state.graph = graphPresets().diamond;
+    ctx.state.graph.directed = true;
+  }
+  ctx.log(`set ${domain} → ${ctx.state.algo}`, 'ok');
   ctx.app().afterDataChange();
 }
 

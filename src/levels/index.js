@@ -1,36 +1,22 @@
 /**
- * Level definitions — sequenced like LearnGitBranching.
+ * Level definitions — full algorithms curriculum, LGB-style sequenced challenges.
  *
  * Level shape:
  * {
  *   id, name, desc, par,
- *   kind: 'tutorial' | 'golf-sort' | 'golf-search' | 'golf-graph' | 'quiz',
+ *   kind: 'tutorial' | 'golf-sort' | 'golf-search' | 'golf-graph' | 'quiz' | 'theory-run' | 'analysis',
  *   setup: { ... partial SandboxState },
- *   intro: string (markdown-lite),
+ *   intro: string (html),
  *   goal: string,
  *   win: (ctx) => boolean,
- *   onWin?: (ctx) => void
  * }
  */
 
-/**
- * @typedef {Object} Level
- * @property {string} id
- * @property {string} name
- * @property {string} desc
- * @property {number} par
- * @property {string} kind
- * @property {object} setup
- * @property {string} intro
- * @property {string} goal
- * @property {(ctx: any) => boolean} win
- */
-
-/** @type {Record<string, { name: string, blurb: string, levels: Level[] }>} */
+/** @type {Record<string, { name: string, blurb: string, levels: any[] }>} */
 export const sequences = {
   intro: {
     name: 'intro',
-    blurb: 'What an algorithm step looks like',
+    blurb: 'Step model, first golf, complexity intuition',
     levels: [
       {
         id: 'intro-1',
@@ -38,20 +24,11 @@ export const sequences = {
         desc: 'Run bubble sort and watch compares/swaps',
         par: 2,
         kind: 'tutorial',
-        setup: {
-          kind: 'array',
-          mode: 'sort',
-          algo: 'bubble',
-          array: [5, 2, 8, 1, 9],
-          target: null,
-        },
+        setup: { kind: 'array', mode: 'sort', algo: 'bubble', array: [5, 2, 8, 1, 9], target: null },
         intro:
-          '<p>Every algorithm we study is a sequence of <strong>steps</strong>: compare, swap, visit, relax.</p>' +
-          '<p>LearnAlgo turns those steps into frames you can play, pause, and step through.</p>' +
-          '<ol><li>Set the algorithm: <code>set sort bubble</code></li>' +
-          '<li>Generate steps: <code>run</code></li>' +
-          '<li>Use play / step in the transport bar</li></ol>',
-        goal: 'Run the algorithm once (type `run`) and finish the animation.',
+          '<p>Every algorithm is a sequence of <strong>steps</strong>: compare, swap, visit, relax.</p>' +
+          '<ol><li><code>set sort bubble</code></li><li><code>run</code></li><li>play / step</li></ol>',
+        goal: 'Run the algorithm once (`run`) and finish the animation.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
       },
       {
@@ -60,19 +37,11 @@ export const sequences = {
         desc: 'Sort 3 cells with manual swaps',
         par: 1,
         kind: 'golf-sort',
-        setup: {
-          kind: 'array',
-          mode: 'manual-sort',
-          algo: 'manual',
-          array: [3, 1, 2],
-          target: null,
-          sorted: [],
-        },
+        setup: { kind: 'array', mode: 'manual-sort', algo: 'manual', array: [3, 1, 2], target: null, sorted: [] },
         intro:
-          '<p>Now <strong>you</strong> drive the steps. Each command counts as a golf move.</p>' +
-          '<p>Sort the array ascending with <code>swap i j</code>.</p>' +
-          '<p>Par is 1 swap — only one pair is out of order enough to fix in one move.</p>',
-        goal: 'Make the array sorted with as few swaps as possible. Par = 1.',
+          '<p>You drive the steps. Each command counts as a golf move.</p>' +
+          '<p>Sort ascending with <code>swap i j</code>. Par = 1.</p>',
+        goal: 'Sorted with as few swaps as possible. Par = 1.',
         win: (ctx) => isSorted(ctx.state.array),
       },
       {
@@ -81,177 +50,222 @@ export const sequences = {
         desc: 'Manual sort of 4 — think before you swap',
         par: 2,
         kind: 'golf-sort',
-        setup: {
-          kind: 'array',
-          mode: 'manual-sort',
-          algo: 'manual',
-          array: [4, 3, 1, 2],
-          target: null,
-          sorted: [],
-        },
+        setup: { kind: 'array', mode: 'manual-sort', algo: 'manual', array: [4, 3, 1, 2], target: null, sorted: [] },
         intro:
-          '<p>Same idea, slightly harder. Use <code>compare i j</code> freely (free — not counted as golf if you want), then <code>swap</code>.</p>' +
-          '<p>Actually: <em>every</em> command counts. Be surgical.</p>' +
-          '<p>Hint: selection-sort style — put the min at the front first.</p>',
+          '<p>Selection-sort mindset: put the min at the front first.</p><p>Par = 2 swaps.</p>',
         goal: 'Sorted ascending. Par = 2 swaps.',
         win: (ctx) => isSorted(ctx.state.array),
+      },
+      {
+        id: 'intro-4',
+        name: 'Name that growth',
+        desc: 'Asymptotics quiz (O / Θ / classes)',
+        par: 3,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'asym', array: [0], meta: { answers: {} } },
+        intro:
+          '<p>Read <code>lesson asymptotics</code> first.</p>' +
+          '<p>Answer with <code>answer 1 b</code> (choice letter).</p>' +
+          '<ol><li>3n²+n log n+5 is … a) O(n) b) O(n²) c) O(n² log n) d) O(n³)</li>' +
+          '<li>log(n!) is … a) Θ(log n) b) Θ(n) c) Θ(n log n) d) Θ(n²)</li>' +
+          '<li>f=O(g), g=O(h) ⇒ f=… a) O(h) b) Ω(h) c) Θ(h) d) none</li></ol>',
+        goal: 'All 3 correct. Answers: 1=b, 2=c, 3=a',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'c' && a['3'] === 'a';
+        },
+      },
+    ],
+  },
+
+  asymptotics: {
+    name: 'asymptotics & recurrences',
+    blurb: 'Big-O, Master Theorem, substitution',
+    levels: [
+      {
+        id: 'asym-1',
+        name: 'Master Theorem I',
+        desc: 'Classify 4T(n/2)+Θ(n)',
+        par: 1,
+        kind: 'theory-run',
+        setup: {
+          kind: 'matrix', mode: 'theory', algo: 'master', array: [],
+          meta: { a: 4, b: 2, fPower: 1, logPow: 0 },
+        },
+        intro:
+          '<p><code>lesson recurrences</code></p><p>Run the Master Theorem evaluator: <code>run</code>.</p>' +
+          '<p>Check: case 1 → Θ(n²).</p>',
+        goal: 'Run MT on 4T(n/2)+n and confirm case 1.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length >= 2,
+      },
+      {
+        id: 'asym-2',
+        name: 'Master Theorem II',
+        desc: 'Classify 2T(n/2)+Θ(n log n)',
+        par: 1,
+        kind: 'theory-run',
+        setup: {
+          kind: 'matrix', mode: 'theory', algo: 'master', array: [],
+          meta: { a: 2, b: 2, fPower: 1, logPow: 1 },
+        },
+        intro: '<p>Case 2 with k=1 → Θ(n (log n)²). Run to verify.</p>',
+        goal: 'Run MT and confirm case 2.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length >= 2,
+      },
+      {
+        id: 'asym-3',
+        name: 'Recurrence exam',
+        desc: '4 Master Theorem questions',
+        par: 4,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'rec', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol>' +
+          '<li>4T(n/2)+Θ(n) → a) Θ(n) b) Θ(n log n) c) Θ(n²) d) Θ(n² log n)</li>' +
+          '<li>2T(n/2)+Θ(n log n) → a) Θ(n log n) b) Θ(n log² n) c) Θ(n²) d) Θ(n)</li>' +
+          '<li>T(n/2)+Θ(1) → a) Θ(1) b) Θ(log n) c) Θ(n) d) Θ(n log n)</li>' +
+          '<li>3T(n/2)+Θ(n) → a) Θ(n) b) Θ(n^{log₂3}) c) Θ(n²) d) Θ(n log n)</li>' +
+          '</ol><p>Answers via <code>answer 1 c</code> etc.</p>',
+        goal: 'All 4 correct (c, b, b, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'c' && a['2'] === 'b' && a['3'] === 'b' && a['4'] === 'b';
+        },
       },
     ],
   },
 
   sorting: {
     name: 'sorting',
-    blurb: 'Bubble → selection → insertion → merge → quick',
+    blurb: 'Comparison sorts, linear sorts, theory',
     levels: [
       {
         id: 'sort-bubble',
         name: 'Bubble golf',
-        desc: 'Sort 5 by swapping adjacent pairs only',
+        desc: 'Sort 5 by swapping',
         par: 6,
         kind: 'golf-sort',
-        setup: {
-          kind: 'array',
-          mode: 'manual-sort',
-          algo: 'bubble',
-          array: [5, 1, 4, 2, 8],
-          sorted: [],
-        },
-        intro:
-          '<p>Bubble sort only swaps <strong>adjacent</strong> cells. In golf mode you may still swap any pair — but the par assumes adjacent-only strategy.</p>' +
-          '<p>Watch the auto version: <code>set sort bubble</code> · <code>run</code>.</p>' +
-          '<p>Then reset and sort by hand.</p>',
-        goal: 'Array sorted. Par = 6 (inversion count of the start).',
+        setup: { kind: 'array', mode: 'manual-sort', algo: 'bubble', array: [5, 1, 4, 2, 8], sorted: [] },
+        intro: '<p>Par = inversion count of start. <code>lesson sorting</code></p>',
+        goal: 'Sorted. Par = 6.',
         win: (ctx) => isSorted(ctx.state.array),
       },
       {
         id: 'sort-selection',
         name: 'Selection mindset',
-        desc: 'Place each minimum into position',
+        desc: 'Place each minimum',
         par: 3,
         kind: 'golf-sort',
-        setup: {
-          kind: 'array',
-          mode: 'manual-sort',
-          algo: 'selection',
-          array: [7, 3, 9, 1, 5],
-          sorted: [],
-        },
-        intro:
-          '<p>Selection sort: find the minimum of the unsorted suffix, swap it into place.</p>' +
-          '<p>Three out-of-place minima → par 3.</p>',
-        goal: 'Sorted ascending. Par = 3 swaps.',
+        setup: { kind: 'array', mode: 'manual-sort', algo: 'selection', array: [7, 3, 9, 1, 5], sorted: [] },
+        intro: '<p>Find min of suffix, swap into place. Par = 3.</p>',
+        goal: 'Sorted. Par = 3.',
         win: (ctx) => isSorted(ctx.state.array),
       },
       {
         id: 'sort-insertion',
         name: 'Insertion run',
         desc: 'Nearly sorted — insertion wins',
-        par: 2,
+        par: 1,
         kind: 'golf-sort',
-        setup: {
-          kind: 'array',
-          mode: 'manual-sort',
-          algo: 'insertion',
-          array: [1, 2, 4, 3, 5],
-          sorted: [],
-        },
-        intro:
-          '<p>This input is almost sorted — insertion sort’s best case.</p>' +
-          '<p>One adjacent inversion pair. Fix it in 1–2 moves.</p>',
-        goal: 'Sorted ascending. Par = 1 swap.',
+        setup: { kind: 'array', mode: 'manual-sort', algo: 'insertion', array: [1, 2, 4, 3, 5], sorted: [] },
+        intro: '<p>One adjacent inversion. Best case of insertion is Θ(n).</p>',
+        goal: 'Sorted. Par = 1.',
         win: (ctx) => isSorted(ctx.state.array),
       },
       {
         id: 'sort-merge',
         name: 'Merge audit',
-        desc: 'Run merge sort and read the divide tree',
+        desc: 'Run merge sort · Θ(n log n)',
         par: 1,
         kind: 'tutorial',
-        setup: {
-          kind: 'array',
-          mode: 'sort',
-          algo: 'merge',
-          array: [38, 27, 43, 3, 9, 82, 10],
-          sorted: [],
-        },
-        intro:
-          '<p>Merge sort is divide &amp; conquer: split, sort halves, merge.</p>' +
-          '<p>Step through and note the Θ(n log n) shape — depth log n, merge work n per level.</p>',
+        setup: { kind: 'array', mode: 'sort', algo: 'merge', array: [38, 27, 43, 3, 9, 82, 10], sorted: [] },
+        intro: '<p>Divide &amp; conquer. Depth log n, work n per level.</p>',
         goal: 'Run merge sort to completion.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 5,
       },
       {
         id: 'sort-quick',
         name: 'Pivot intuition',
-        desc: 'Run quicksort; pivot lands correctly',
+        desc: 'Run quicksort',
         par: 1,
         kind: 'tutorial',
-        setup: {
-          kind: 'array',
-          mode: 'sort',
-          algo: 'quick',
-          array: [9, 3, 7, 1, 8, 2, 5],
-          sorted: [],
-        },
-        intro:
-          '<p>Quicksort partitions around a pivot: left &lt; pivot ≤ right.</p>' +
-          '<p>Average O(n log n). Worst O(n²) when pivots are consistently bad.</p>',
+        setup: { kind: 'array', mode: 'sort', algo: 'quick', array: [9, 3, 7, 1, 8, 2, 5], sorted: [] },
+        intro: '<p>Partition around pivot. Avg O(n log n), worst O(n²).</p>',
         goal: 'Run quicksort to completion.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 5,
+      },
+      {
+        id: 'sort-heap',
+        name: 'Heap sort',
+        desc: 'Build heap + extract max',
+        par: 1,
+        kind: 'tutorial',
+        setup: { kind: 'array', mode: 'sort', algo: 'heap', array: [12, 3, 9, 1, 7, 4, 8], sorted: [] },
+        intro: '<p>Θ(n log n) worst-case, in-place. Contrast with quicksort.</p>',
+        goal: 'Run heap sort to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 5,
+      },
+      {
+        id: 'sort-counting',
+        name: 'Counting sort',
+        desc: 'Θ(n+k) non-comparison',
+        par: 1,
+        kind: 'tutorial',
+        setup: { kind: 'array', mode: 'sort', algo: 'counting', array: [4, 2, 2, 8, 3, 3, 1], sorted: [] },
+        intro:
+          '<p><code>lesson linearSorts</code></p><p>Count → prefix → stable scatter.</p>' +
+          '<p>Evades Ω(n log n) by using key values.</p>',
+        goal: 'Run counting sort to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'sort-radix',
+        name: 'Radix LSD',
+        desc: 'Digit-by-digit counting',
+        par: 1,
+        kind: 'tutorial',
+        setup: { kind: 'array', mode: 'sort', algo: 'radix', array: [170, 45, 75, 90, 802, 24, 2, 66], sorted: [] },
+        intro: '<p>O(d(n+k)). Must use a <em>stable</em> base sort.</p>',
+        goal: 'Run radix sort to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'sort-theory',
+        name: 'Sorts exam',
+        desc: 'Lower bound, stability, complexity',
+        par: 4,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'sortq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>Worst-case quicksort (last pivot)? a) Θ(n log n) b) Θ(n²) c) Θ(n) d) Θ(log n)</li>' +
+          '<li>Stable + Θ(n log n) worst? a) heap b) quick c) merge d) selection</li>' +
+          '<li>Comparison lower bound? a) Ω(n) b) Ω(n log n) c) Ω(n²) d) Ω(log n)</li>' +
+          '<li>Counting sort? a) O(n log n) b) O(n+k) c) O(nk) d) O(k log k)</li></ol>',
+        goal: 'All 4 correct (b, c, b, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'c' && a['3'] === 'b' && a['4'] === 'b';
+        },
       },
     ],
   },
 
   searching: {
-    name: 'searching',
-    blurb: 'Linear scan vs binary search',
+    name: 'searching & selection',
+    blurb: 'Binary search, order statistics',
     levels: [
       {
         id: 'search-linear',
         name: 'Linear probe',
-        desc: 'Find target 7 by probing indices',
-        par: 4,
+        desc: 'Find target 7',
+        par: 2,
         kind: 'golf-search',
         setup: {
-          kind: 'array',
-          mode: 'manual-search',
-          algo: 'linear',
-          array: [4, 7, 1, 9, 3, 8],
-          target: 7,
-          sorted: [],
+          kind: 'array', mode: 'manual-search', algo: 'linear',
+          array: [4, 7, 1, 9, 3, 8], target: 7, sorted: [], meta: {},
         },
-        intro:
-          '<p>Linear search checks cells left to right until a hit.</p>' +
-          '<p>Golf: use <code>probe i</code> until you know where the target is, then the level completes when a probe hits.</p>' +
-          '<p>Target is 7 at index 1 — par assumes you don’t waste probes on the right.</p>',
-        goal: 'Hit the target with `probe`. Par = 2 probes (smart) / 4 if scanning blindly after wrong starts.',
-        win: (ctx) =>
-          ctx.engine.frames.some(
-            (f) => f.type === 'done' && f.extra && f.extra.found === ctx.state.array.indexOf(ctx.state.target),
-          ) || ctx.engine.frames.some((f) => f.extra && f.extra.mid != null && ctx.state.array[f.extra.mid] === ctx.state.target),
-      },
-      {
-        id: 'search-binary',
-        name: 'Binary search golf',
-        desc: 'Sorted array · target 23 · cut the range',
-        par: 3,
-        kind: 'golf-search',
-        setup: {
-          kind: 'array',
-          mode: 'manual-search',
-          algo: 'binary',
-          array: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91],
-          target: 23,
-          sorted: [],
-          meta: { lo: 0, hi: 9, mid: 4 },
-        },
-        intro:
-          '<p>Binary search halves the window each probe. Input is sorted.</p>' +
-          '<p>Commands:</p>' +
-          '<ul><li><code>probe mid</code> — check middle of current window</li>' +
-          '<li><code>lo mid+1</code> / <code>hi mid-1</code> — shrink window</li></ul>' +
-          '<p>Start window is [0..9], mid = 4. Target = 23.</p>',
-        goal: 'Find 23 by probing. Par = 3 probes.',
+        intro: '<p><code>probe i</code> until you hit the target.</p>',
+        goal: 'Hit the target with `probe`.',
         win: (ctx) => {
           const arr = ctx.state.array;
           return ctx.engine.frames.some((f) => {
@@ -260,164 +274,546 @@ export const sequences = {
           });
         },
       },
+      {
+        id: 'search-binary',
+        name: 'Binary search golf',
+        desc: 'Sorted · target 23 · cut the range',
+        par: 3,
+        kind: 'golf-search',
+        setup: {
+          kind: 'array', mode: 'manual-search', algo: 'binary',
+          array: [2, 5, 8, 12, 16, 23, 38, 56, 72, 91], target: 23, sorted: [],
+          meta: { lo: 0, hi: 9, mid: 4 },
+        },
+        intro:
+          '<p><code>probe mid</code> · <code>lo mid+1</code> · <code>hi mid-1</code></p>' +
+          '<p>Invariant: target ∈ a[lo..hi] if present. O(log n).</p>',
+        goal: 'Find 23. Par = 3 probes.',
+        win: (ctx) => {
+          const arr = ctx.state.array;
+          return ctx.engine.frames.some((f) => {
+            const mid = f.extra?.mid ?? (f.indices && f.indices[0]);
+            return mid != null && arr[mid] === ctx.state.target;
+          });
+        },
+      },
+      {
+        id: 'search-select',
+        name: 'Order statistic',
+        desc: 'Randomized select k-th smallest',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'array', mode: 'search', algo: 'select', array: [7, 2, 9, 1, 5, 3, 8], meta: { k: 2 },
+        },
+        intro:
+          '<p><code>lesson searchingSelection</code></p><p>Expected Θ(n) randomized select; MOM is worst-case Θ(n).</p>',
+        goal: 'Run select to find the k-th element.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.found != null),
+      },
+      {
+        id: 'search-theory',
+        name: 'Search exam',
+        desc: 'Preconditions and costs',
+        par: 2,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'sq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>Binary search precondition? a) random input b) sorted c) positive d) distinct</li>' +
+          '<li>MOM guarantees? a) expected O(n) b) worst O(n) c) O(n log n) d) O(log n)</li></ol>' +
+          '<p>Answers: 1=b, 2=b</p>',
+        goal: 'Both correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'b';
+        },
+      },
+    ],
+  },
+
+  structures: {
+    name: 'data structures',
+    blurb: 'BST, heap, union-find, hash',
+    levels: [
+      {
+        id: 'ds-bst',
+        name: 'BST inserts',
+        desc: 'Watch the search tree form',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'ds', algo: 'bst',
+          array: [], meta: { keys: [8, 3, 10, 1, 6, 14, 4, 7, 13] },
+        },
+        intro:
+          '<p><code>lesson dataStructures</code></p><p>Invariant: left &lt; node &lt; right. Unbalanced → h = Θ(n).</p>',
+        goal: 'Run BST construction and read the final height.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'ds-heap',
+        name: 'Heap sift-up',
+        desc: 'Build a max-heap',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'ds', algo: 'heap',
+          array: [], meta: { keys: [20, 15, 8, 10, 7, 6, 3] },
+        },
+        intro: '<p>Array-backed complete binary tree. Insert O(log n). Build-heap O(n).</p>',
+        goal: 'Run heap inserts to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'ds-uf',
+        name: 'Union-Find',
+        desc: 'Path compression + rank',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'ds', algo: 'uf', array: [], meta: {},
+        },
+        intro:
+          '<p>Amortized O(α(n)). Used by Kruskal.</p>' +
+          '<p>Watch FIND paths flatten after compression.</p>',
+        goal: 'Run union-find ops to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'ds-hash',
+        name: 'Hash collisions',
+        desc: 'Linear probing table',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'ds', algo: 'hash', array: [], meta: {},
+        },
+        intro:
+          '<p>h(k)=k mod 11. Expected O(1+α). Open addressing needs α&lt;1.</p>',
+        goal: 'Run hash inserts to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'ds-theory',
+        name: 'Structures exam',
+        desc: 'Costs and invariants',
+        par: 4,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'dsq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>Heap insert? a) O(1) b) O(log n) c) O(n) d) O(n log n)</li>' +
+          '<li>UF amortized? a) O(1) b) O(log n) c) O(α(n)) d) O(n)</li>' +
+          '<li>Unbalanced BST search? a) O(log n) b) O(n) c) O(n log n) d) O(1)</li>' +
+          '<li>Build-heap? a) O(n log n) b) O(n) c) O(n²) d) O(log n)</li></ol>',
+        goal: 'All 4 correct (b, c, b, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'c' && a['3'] === 'b' && a['4'] === 'b';
+        },
+      },
     ],
   },
 
   graphs: {
     name: 'graphs',
-    blurb: 'BFS, DFS, Dijkstra, MST',
+    blurb: 'BFS/DFS, shortest paths, MST, flow',
     levels: [
       {
         id: 'graph-bfs',
         name: 'BFS order',
-        desc: 'Visit in breadth-first order from S',
+        desc: 'Visit level-by-level from S',
         par: 6,
         kind: 'golf-graph',
         setup: {
-          kind: 'graph',
-          mode: 'manual-graph',
-          algo: 'bfs',
-          graph: null, // filled by loader with star preset
+          kind: 'graph', mode: 'manual-graph', algo: 'bfs', graph: null,
           meta: { visited: [], tree: [], source: 0, order: [] },
         },
-        intro:
-          '<p>Breadth-first search visits nodes level by level from source <code>S</code>.</p>' +
-          '<p>Use <code>visit ID</code> with node ids 0..5 (S=0). Visit children of S before grandchildren.</p>' +
-          '<p>Compare with <code>set graph bfs</code> · <code>run</code>.</p>',
-        goal: 'Visit all 6 nodes in valid BFS order (children of a node before deeper nodes).',
+        intro: '<p><code>visit ID</code> · children of S before deeper nodes.</p><p><code>lesson graphsTheory</code></p>',
+        goal: 'Visit all 6 nodes in valid BFS order from S.',
         win: (ctx) => isBfsOrder(ctx),
       },
       {
         id: 'graph-dfs',
         name: 'DFS order',
-        desc: 'Depth-first from S on the same star',
+        desc: 'Depth-first from S',
         par: 6,
         kind: 'golf-graph',
         setup: {
-          kind: 'graph',
-          mode: 'manual-graph',
-          algo: 'dfs',
-          graph: null,
+          kind: 'graph', mode: 'manual-graph', algo: 'dfs', graph: null,
           meta: { visited: [], tree: [], source: 0, order: [] },
         },
-        intro:
-          '<p>DFS dives deep along one path before backtracking.</p>' +
-          '<p>Same graph as BFS — different visit order. Use <code>visit ID</code>.</p>',
+        intro: '<p>Dive deep before backtracking.</p>',
         goal: 'Visit all nodes in a valid DFS order from S.',
         win: (ctx) => isDfsOrder(ctx),
       },
       {
         id: 'graph-mst',
         name: 'Build an MST',
-        desc: 'Pick edges to span the star graph cheaply',
+        desc: 'Pick 5 edges · min total weight',
         par: 5,
         kind: 'golf-graph',
         setup: {
-          kind: 'graph',
-          mode: 'manual-graph',
-          algo: 'prim',
-          graph: null,
+          kind: 'graph', mode: 'manual-graph', algo: 'prim', graph: null,
           meta: { visited: [], tree: [], source: 0 },
         },
         intro:
-          '<p>Minimum spanning tree: connect all nodes, no cycles, min total weight.</p>' +
-          '<p>Use <code>pick u v</code> to add an edge. 6 nodes → 5 edges needed.</p>' +
-          '<p>Weights are on the edges. Prefer cheap edges (Kruskal/Prim intuition).</p>',
-        goal: 'Pick 5 edges that form a tree covering all 6 nodes. Prefer min total weight.',
+          '<p>Cut property: lightest crossing edge is safe.</p><p><code>pick u v</code></p><p><code>lesson mst</code></p>',
+        goal: 'Pick 5 edges forming a spanning tree. Prefer min weight.',
         win: (ctx) => isSpanningTree(ctx),
+      },
+      {
+        id: 'graph-dijkstra',
+        name: 'Dijkstra run',
+        desc: 'Non-negative single-source',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'graph', algo: 'dijkstra', graph: null, meta: {},
+        },
+        intro:
+          '<p>Settle-once invariant. Fails on negative edges.</p><p><code>set graph dijkstra</code> · <code>run</code></p><p><code>lesson shortestPaths</code></p>',
+        goal: 'Run Dijkstra to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'graph-mst-auto',
+        name: 'Kruskal vs Prim',
+        desc: 'Watch both MST builders',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'graph', algo: 'kruskal', graph: null, meta: {},
+        },
+        intro: '<p>Kruskal = sort + DSU. Prim = grow tree with heap. Same MST cost.</p>',
+        goal: 'Run Kruskal to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'graph-flow',
+        name: 'Max-flow',
+        desc: 'Edmonds-Karp + min-cut',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'flow', algo: 'ek', graph: null, meta: {},
+        },
+        intro:
+          '<p><code>lesson flow</code></p><p>Augment along BFS paths in the residual. Max-flow = min-cut.</p>' +
+          '<p><code>set flow ek</code> · <code>run</code></p>',
+        goal: 'Run Edmonds-Karp and read max-flow value.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.value != null),
+      },
+      {
+        id: 'graph-theory',
+        name: 'Graphs exam',
+        desc: 'Complexity + algorithm choice',
+        par: 4,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'gq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>BFS adj-list? a) O(V²) b) O(V+E) c) O(E log V) d) O((V+E)log V)</li>' +
+          '<li>Dijkstra + binary heap? a) O(V+E) b) O((V+E) log V) c) O(V²) d) O(VE)</li>' +
+          '<li>Negative edges — use? a) Dijkstra b) BFS c) Bellman-Ford d) Prim</li>' +
+          '<li>SCC condensation is? a) not a DAG b) 1 node c) a DAG d) 2 nodes</li></ol>',
+        goal: 'All 4 correct (b, b, c, c).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'b' && a['3'] === 'c' && a['4'] === 'c';
+        },
       },
     ],
   },
 
   dp: {
     name: 'dynamic programming',
-    blurb: 'Fib, coins, LCS, knapsack',
+    blurb: 'Subproblems, recurrences, classic tables',
     levels: [
       {
         id: 'dp-fib',
         name: 'Fill fib',
-        desc: 'Run bottom-up Fibonacci',
+        desc: 'Bottom-up Fibonacci',
         par: 1,
         kind: 'tutorial',
-        setup: {
-          kind: 'matrix',
-          mode: 'dp',
-          algo: 'fib',
-          array: [],
-          meta: {},
-        },
-        intro:
-          '<p>DP = reuse subproblem answers.</p>' +
-          '<p>fib(n) = fib(n-1) + fib(n-2) with a table instead of naive recursion.</p>' +
-          '<p><code>set dp fib</code> · <code>run</code></p>',
+        setup: { kind: 'matrix', mode: 'dp', algo: 'fib', array: [], meta: {} },
+        intro: '<p><code>lesson dpTheory</code></p><p>dp[i]=dp[i−1]+dp[i−2]. O(n) time/space.</p>',
         goal: 'Run fib DP to completion.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
       },
       {
         id: 'dp-coin',
         name: 'Coin change table',
-        desc: 'Watch dp[x] fill for amount 11',
+        desc: 'Unlimited coins · min count',
         par: 1,
         kind: 'tutorial',
-        setup: {
-          kind: 'matrix',
-          mode: 'dp',
-          algo: 'coin',
-          array: [],
-          meta: {},
-        },
-        intro:
-          '<p>Unlimited coins {1,3,4}, amount 11.</p>' +
-          '<p>dp[x] = fewest coins that sum to x.</p>' +
-          '<p><code>set dp coin</code> · <code>run</code></p>',
-        goal: 'Run coin change DP to completion.',
+        setup: { kind: 'matrix', mode: 'dp', algo: 'coin', array: [], meta: {} },
+        intro: '<p>dp[x]=1+min_c dp[x−c]. Greedy by largest coin is <em>wrong</em> for {1,3,4}, amount 6.</p>',
+        goal: 'Run coin change to completion.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
       },
       {
         id: 'dp-lcs',
         name: 'LCS grid',
-        desc: 'Longest common subsequence table',
+        desc: '2D table · match/diag',
         par: 1,
         kind: 'tutorial',
-        setup: {
-          kind: 'matrix',
-          mode: 'dp',
-          algo: 'lcs',
-          array: [],
-          meta: {},
-        },
-        intro:
-          '<p>LCS(A,B) via a 2D table. Match → diagonal+1; else max(top, left).</p>' +
-          '<p><code>set dp lcs</code> · <code>run</code></p>',
+        setup: { kind: 'matrix', mode: 'dp', algo: 'lcs', array: [], meta: {} },
+        intro: '<p>Match → diag+1; else max(top,left). O(mn).</p>',
         goal: 'Run LCS to completion.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+      },
+      {
+        id: 'dp-knap',
+        name: '0/1 knapsack',
+        desc: 'Pseudo-poly O(nW)',
+        par: 1,
+        kind: 'tutorial',
+        setup: { kind: 'matrix', mode: 'dp', algo: 'knapsack', array: [], meta: {} },
+        intro: '<p>Guess: take item i or skip. Pseudo-polynomial in W.</p>',
+        goal: 'Run knapsack to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+      },
+      {
+        id: 'dp-theory',
+        name: 'DP exam',
+        desc: 'Complexity + correctness',
+        par: 3,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'dpq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>LCS time? a) O(m+n) b) O(mn) c) O(mn log) d) O(2^{m+n})</li>' +
+          '<li>0/1 knapsack? a) O(n) b) O(nW) c) O(2ⁿ) d) O(W log W)</li>' +
+          '<li>Min-coins recurrence? a) dp[x]=1+min_c dp[x−c] b) greedy largest c) dp[x]=dp[x−1] d) sort</li></ol>' +
+          '<p>Answers: b, b, a</p>',
+        goal: 'All 3 correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'b' && a['3'] === 'a';
+        },
       },
     ],
   },
 
-  complexity: {
-    name: 'complexity',
-    blurb: 'Growth rates under pressure',
+  greedy: {
+    name: 'greedy & strings',
+    blurb: 'Exchange argument, Huffman, KMP',
     levels: [
       {
-        id: 'cmp-1',
-        name: 'Name that growth',
-        desc: 'Quiz: match algorithm to complexity',
-        par: 4,
-        kind: 'quiz',
+        id: 'greedy-act',
+        name: 'Activity selection',
+        desc: 'Earliest finish time',
+        par: 1,
+        kind: 'tutorial',
         setup: {
-          kind: 'array',
-          mode: 'quiz',
-          algo: 'bubble',
-          array: [0],
-          meta: { answers: {} },
+          kind: 'tree', mode: 'greedy', algo: 'activity', array: [], meta: {},
         },
         intro:
-          '<p>Answer via the console: <code>answer 1 b</code> style, or use the buttons in the side panel.</p>' +
-          '<p>1. bubble sort worst? 2. binary search? 3. merge sort? 4. Dijkstra (binary heap)?</p>' +
-          '<p>Choices: a) O(n) b) O(n²) c) O(n log n) d) O(log n) e) O((V+E) log V)</p>',
-        goal: 'All 4 answers correct.',
-        win: (ctx) => quizDone(ctx),
+          '<p><code>lesson greedy</code></p><p>Exchange argument: earliest-finish leaves maximal room.</p>',
+        goal: 'Run activity selection to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'greedy-huff',
+        name: 'Huffman tree',
+        desc: 'Merge two lightest',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'greedy', algo: 'huffman', array: [],
+          meta: { freq: { A: 5, B: 2, C: 1, D: 1 } },
+        },
+        intro: '<p>Minimizes Σ freq·depth among prefix codes. O(n log n).</p>',
+        goal: 'Run Huffman to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 2,
+      },
+      {
+        id: 'string-kmp',
+        name: 'KMP failure function',
+        desc: 'Pattern AAB in AABAABAAB',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'string', algo: 'kmp', array: [],
+          meta: { text: 'AABAABAAB', pat: 'AAB' },
+        },
+        intro: '<p><code>lesson strings</code></p><p>lps/π table + shift on mismatch. O(n+m).</p>',
+        goal: 'Run KMP to find a match.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.match >= 0),
+      },
+      {
+        id: 'string-rk',
+        name: 'Rabin-Karp',
+        desc: 'Rolling hash windows',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'string', algo: 'rk', array: [],
+          meta: { text: 'AABAACAADAABAABA', pat: 'AABA' },
+        },
+        intro: '<p>O(1) rolling hash + verify. Watch spurious hits.</p>',
+        goal: 'Run Rabin-Karp to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 2,
+      },
+      {
+        id: 'greedy-theory',
+        name: 'Greedy exam',
+        desc: 'Rules and counterexamples',
+        par: 3,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'grq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>Activity selection? a) earliest start b) earliest finish c) shortest d) most conflicts</li>' +
+          '<li>Fractional knapsack key? a) value/weight b) weight c) value d) random</li>' +
+          '<li>Huffman cost is? a) depths sum b) weighted path length c) leaves d) height</li></ol>',
+        goal: 'All 3 correct (b, a, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'a' && a['3'] === 'b';
+        },
+      },
+    ],
+  },
+
+  dc: {
+    name: 'divide & conquer',
+    blurb: 'Closest pair, Karatsuba, Master Theorem',
+    levels: [
+      {
+        id: 'dc-closest',
+        name: 'Closest pair',
+        desc: 'Divide by x · strip check',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'dc', algo: 'closest', array: [],
+          meta: {
+            points: [
+              [2, 3], [12, 30], [40, 50], [5, 1], [12, 10], [3, 4],
+            ],
+          },
+        },
+        intro:
+          '<p><code>lesson divideConquer</code></p><p>T(n)=2T(n/2)+O(n) after strip lemma (7 neighbors).</p>',
+        goal: 'Run closest pair to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.type === 'done'),
+      },
+      {
+        id: 'dc-mt',
+        name: 'Karatsuba via Master Theorem',
+        desc: '3T(n/2)+Θ(n)',
+        par: 1,
+        kind: 'theory-run',
+        setup: {
+          kind: 'matrix', mode: 'theory', algo: 'master', array: [],
+          meta: { a: 3, b: 2, fPower: 1, logPow: 0 },
+        },
+        intro: '<p>Case 1 → Θ(n^{log₂3}) ≈ n^{1.585}.</p>',
+        goal: 'Run MT and confirm Karatsuba bound.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length >= 2,
+      },
+    ],
+  },
+
+  np: {
+    name: 'NP-completeness',
+    blurb: 'Reductions — the exam core',
+    levels: [
+      {
+        id: 'np-1',
+        name: 'SAT ≤ 3-SAT',
+        desc: 'Gadget reduction walkthrough',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'np', algo: 'sat-3sat', array: [], meta: {},
+        },
+        intro:
+          '<p><code>lesson np</code></p><p>Step through the construction. Then prove both directions.</p>',
+        goal: 'Step through the SAT→3-SAT reduction.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length >= 3,
+      },
+      {
+        id: 'np-2',
+        name: '3-SAT ≤ CLIQUE',
+        desc: 'Group-of-literals construction',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'np', algo: '3sat-clique', array: [], meta: {},
+        },
+        intro: '<p>k = #clauses. Consistency of one-per-group clique ⇔ satisfying assignment.</p>',
+        goal: 'Step through the 3-SAT→CLIQUE reduction.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length >= 3,
+      },
+      {
+        id: 'np-3',
+        name: 'CLIQUE ≤ VERTEX-COVER',
+        desc: 'Complement graph trick',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'np', algo: 'clique-vc', array: [], meta: {},
+        },
+        intro: '<p>k-clique in G ⇔ (|V|−k)-cover in Ḡ.</p>',
+        goal: 'Step through CLIQUE→VERTEX-COVER.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length >= 3,
+      },
+      {
+        id: 'np-4',
+        name: 'NP exam',
+        desc: 'Definitions + reduction direction',
+        par: 3,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'npq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>To show B NP-hard? a) B→SAT b) known NPC A→B c) brute force d) B∈NP</li>' +
+          '<li>CLIQUE from? a) PATH b) 3-SAT c) MST d) SORT</li>' +
+          '<li>If P=NP? a) nothing b) all NP have poly algos c) SAT unsolvable d) BFS faster</li></ol>',
+        goal: 'All 3 correct (b, b, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'b' && a['3'] === 'b';
+        },
+      },
+    ],
+  },
+
+  randomized: {
+    name: 'randomized & flow theory',
+    blurb: 'Las Vegas / Monte Carlo / max-flow',
+    levels: [
+      {
+        id: 'flow-1',
+        name: 'Max-flow exam',
+        desc: 'Edmonds-Karp + min-cut',
+        par: 2,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'flq', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol><li>Edmonds-Karp? a) O(E) b) O(VE) c) O(VE²) d) O(V²)</li>' +
+          '<li>Max-flow equals? a) sum caps b) min cut c) #edges d) max edge</li></ol>',
+        goal: 'Both correct (c, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'c' && a['2'] === 'b';
+        },
+      },
+      {
+        id: 'rand-1',
+        name: 'Vegas vs Monte Carlo',
+        desc: 'Error vs time guarantees',
+        par: 2,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'rq', array: [0], meta: { answers: {} } },
+        intro:
+          '<p><code>lesson randomized</code></p>' +
+          '<ol><li>Randomized quicksort is? a) Las Vegas b) Monte Carlo</li>' +
+          '<li>Freivalds matrix check is? a) Las Vegas b) Monte Carlo</li></ol>' +
+          '<p>Answers: a, b</p>',
+        goal: 'Both correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'a' && a['2'] === 'b';
+        },
       },
     ],
   },
@@ -425,11 +821,16 @@ export const sequences = {
 
 export const sequenceOrder = [
   'intro',
+  'asymptotics',
   'sorting',
   'searching',
+  'structures',
   'graphs',
   'dp',
-  'complexity',
+  'greedy',
+  'dc',
+  'np',
+  'randomized',
 ];
 
 /**
@@ -455,10 +856,8 @@ function isSorted(arr) {
 }
 
 function isBfsOrder(ctx) {
-  const order = ctx.state.meta.order || orderFromVisits(ctx);
+  const order = orderFromVisits(ctx);
   if (order.length < 6) return false;
-  // children of S (ids of neighbors of 0) must appear before non-neighbors deeper
-  // Valid BFS: first node is 0; then all distance-1 nodes (any order); then distance-2.
   const dist = bfsDist(ctx.state.graph, 0);
   let last = -1;
   for (const id of order) {
@@ -472,13 +871,10 @@ function isBfsOrder(ctx) {
 function isDfsOrder(ctx) {
   const order = orderFromVisits(ctx);
   if (order.length < 6 || order[0] !== 0) return false;
-  // any DFS preorder of connected undirected graph is fine if we only require validity of stack order
-  // weaker check: visited set complete and started at S
   return new Set(order).size === 6;
 }
 
 function orderFromVisits(ctx) {
-  // reconstruct from visit frames
   return ctx.engine.frames
     .filter((f) => f.type === 'visit')
     .map((f) => f.indices[0])
@@ -526,11 +922,6 @@ function bfsDist(graph, source) {
     }
   }
   return dist;
-}
-
-function quizDone(ctx) {
-  const a = ctx.state.meta.answers || {};
-  return a['1'] === 'b' && a['2'] === 'd' && a['3'] === 'c' && a['4'] === 'e';
 }
 
 export const QUIZ_ANSWERS = {

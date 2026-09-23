@@ -2,35 +2,115 @@ import { SORTERS } from '../algorithms/sorting.js';
 import { SEARCHERS } from '../algorithms/searching.js';
 import { GRAPHERS } from '../algorithms/graphs.js';
 import { DPS } from '../algorithms/dp.js';
+import { LINEAR_SORTERS, quickSelect } from '../algorithms/linearSorts.js';
+import { STRUCTURES } from '../algorithms/structures.js';
+import { GREEDY, STRINGS, FLOW, NP, DC, THEORYRUN } from '../algorithms/extras.js';
 
 /**
- * Turn a named auto algorithm into frames from current sandbox state.
+ * Auto runners keyed by mode:algo
  * @param {import('../engine/SandboxState.js').SandboxState} state
  */
 export function buildAutoFrames(state) {
-  if (state.mode === 'sort' || (state.kind === 'array' && state.mode !== 'search')) {
-    const fn = SORTERS[state.algo] || SORTERS.bubble;
-    return fn(state.array);
+  const algo = state.algo;
+  const mode = state.mode;
+
+  if (mode === 'sort') {
+    if (LINEAR_SORTERS[algo]) return LINEAR_SORTERS[algo](state.array);
+    return (SORTERS[algo] || SORTERS.bubble)(state.array);
   }
-  if (state.mode === 'search') {
+  if (mode === 'search') {
+    if (algo === 'select') return quickSelect(state.array, state.meta.k ?? 0);
     let arr = state.array.slice();
-    if (state.algo === 'binary') {
-      arr = arr.slice().sort((x, y) => x - y);
-    }
+    if (algo === 'binary') arr = arr.slice().sort((x, y) => x - y);
     const target = state.target ?? arr[Math.floor(arr.length / 3)];
     state.target = target;
     state.array = arr;
-    const fn = SEARCHERS[state.algo] || SEARCHERS.linear;
-    return fn(arr, target);
+    return (SEARCHERS[algo] || SEARCHERS.linear)(arr, target);
   }
-  if (state.mode === 'graph') {
-    const fn = GRAPHERS[state.algo] || GRAPHERS.bfs;
-    return fn(state.graph, 0);
+  if (mode === 'graph') {
+    return (GRAPHERS[algo] || GRAPHERS.bfs)(state.graph, 0);
   }
-  if (state.mode === 'dp') {
-    const fn = DPS[state.algo] || DPS.fib;
-    return fn();
+  if (mode === 'dp') {
+    return (DPS[algo] || DPS.fib)();
   }
+  if (mode === 'greedy') {
+    if (algo === 'huffman') {
+      return GREEDY.huffman(state.meta.freq || { A: 5, B: 2, C: 1, D: 1 });
+    }
+    return GREEDY.activitySelection(
+      state.meta.acts || [
+        [1, 4],
+        [3, 5],
+        [0, 6],
+        [5, 7],
+        [3, 9],
+        [5, 9],
+        [6, 10],
+        [8, 11],
+      ],
+    );
+  }
+  if (mode === 'string') {
+    const text = state.meta.text || 'AABAABAAB';
+    const pat = state.meta.pat || 'AAB';
+    return (STRINGS[algo] || STRINGS.kmp)(text, pat);
+  }
+  if (mode === 'flow') {
+    return FLOW.edmondsKarp(state.graph, 0, state.graph.nodes.length - 1);
+  }
+  if (mode === 'ds') {
+    if (algo === 'bst' || algo === 'bst-insert') {
+      return STRUCTURES.bstInserts(state.meta.keys || [8, 3, 10, 1, 6, 14, 4, 7, 13]);
+    }
+    if (algo === 'bst-search') {
+      return STRUCTURES.bstSearch(state.meta.keys || [8, 3, 10, 1, 6, 14, 4, 7, 13], state.meta.searchKey ?? 6);
+    }
+    if (algo === 'heap') {
+      return STRUCTURES.heapInserts(state.meta.keys || [20, 15, 8, 10, 7, 6, 3]);
+    }
+    if (algo === 'uf') {
+      return STRUCTURES.unionFind(
+        state.meta.ufOps || [
+          ['u', 'a', 'b'],
+          ['u', 'c', 'd'],
+          ['u', 'b', 'c'],
+          ['f', 'a', 0],
+          ['u', 'e', 'f'],
+          ['f', 'a', 0],
+        ],
+      );
+    }
+    if (algo === 'hash') {
+      return STRUCTURES.hashLinear(state.meta.keys || [10, 22, 31, 4, 15, 28, 17, 88, 59], 11);
+    }
+  }
+  if (mode === 'np') {
+    return NP.npReduction(algo in { 'sat-3sat': 1, '3sat-clique': 1, 'clique-vc': 1 } ? algo : 'sat-3sat');
+  }
+  if (mode === 'dc') {
+    if (algo === 'closest') {
+      return DC.closestPair(state.meta.points || [
+        [2, 3], [12, 30], [40, 50], [5, 1], [12, 10], [3, 4],
+      ]);
+    }
+    return THEORYRUN.masterTheorem(
+      state.meta.a ?? 2,
+      state.meta.b ?? 2,
+      'poly',
+      state.meta.fPower ?? 1,
+      state.meta.logPow ?? 0,
+    );
+  }
+  if (mode === 'theory') {
+    return THEORYRUN.masterTheorem(
+      state.meta.a ?? 2,
+      state.meta.b ?? 2,
+      'poly',
+      state.meta.fPower ?? 1,
+      state.meta.logPow ?? 0,
+    );
+  }
+
   return [
     {
       type: 'info',
@@ -45,7 +125,6 @@ export function buildAutoFrames(state) {
  * @param {string} name
  * @param {string[]} args
  * @param {import('../engine/SandboxState.js').SandboxState} state
- * @returns {import('../engine/types.js').Frame}
  */
 export function playerMove(name, args, state) {
   const a = state.array;
@@ -96,7 +175,6 @@ export function playerMove(name, args, state) {
     }
     case 'lo':
     case 'hi': {
-      // lo mid+1 / hi mid-1 style window shrink — recorded in meta
       const expr = args.join(' ').replace(/\s+/g, '');
       const m = expr.match(/^(mid|(\d+))([+-]\d+)?$/i);
       let val;
@@ -123,19 +201,20 @@ export function playerMove(name, args, state) {
       };
     }
     case 'visit': {
-      const id = Number(args[0]);
-      if (Number.isNaN(id)) throw new Error('usage: visit ID');
+      const id = args[0];
       const visited = new Set(state.meta.visited || []);
-      if (visited.has(id)) throw new Error('already visited');
-      visited.add(id);
+      const key = Number.isNaN(Number(id)) ? id : Number(id);
+      if (visited.has(key)) throw new Error('already visited');
+      visited.add(key);
       state.meta.visited = [...visited];
       const order = state.meta.order || [];
-      order.push(id);
+      order.push(key);
       state.meta.order = order;
-      const label = state.graph.nodes[id]?.label ?? id;
+      const label =
+        state.graph?.nodes?.[key]?.label ?? (typeof key === 'string' ? key : String(key));
       return {
         type: 'visit',
-        indices: [id],
+        indices: [key],
         message: `visit ${label}`,
         extra: { visited: [...visited], tree: state.meta.tree || [], order: [...order] },
       };
@@ -160,6 +239,26 @@ export function playerMove(name, args, state) {
         message: `${name} ${ul}–${vl}`,
         extra: { visited: state.meta.visited || [], tree, source: state.meta.source ?? 0 },
       };
+    }
+    case 'answer': {
+      const q = String(args[0]);
+      const choice = String(args[1]).toLowerCase();
+      const answers = state.meta.answers || (state.meta.answers = {});
+      answers[q] = choice;
+      return {
+        type: 'info',
+        message: `answer ${q} → ${choice}`,
+        extra: { kind: 'np', title: 'quiz', step: 0, total: 0, answers },
+      };
+    }
+    case 'insert':
+    case 'bst': {
+      const key = Number(args[0]);
+      if (Number.isNaN(key)) throw new Error('usage: insert KEY');
+      const keys = state.meta.keys || [];
+      keys.push(key);
+      state.meta.keys = keys;
+      return STRUCTURES.bstInserts([key]).at(-1);
     }
     default:
       throw new Error(`unhandled move: ${name}`);

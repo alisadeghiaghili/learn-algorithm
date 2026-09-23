@@ -42,12 +42,20 @@ npm run build
 
 ## Course map
 
-1. intro — step mental model, first golf
-2. sorting — bubble, selection, insertion, merge, quick
-3. searching — linear, binary
-4. graphs — BFS, DFS, MST
-5. dynamic programming — fib, coin change, LCS
-6. complexity — growth-rate quiz
+1. intro — step model, golf, asymptotics quiz
+2. asymptotics & recurrences — Master Theorem drills
+3. sorting — comparison sorts + counting/radix/bucket + theory exam
+4. searching & selection — binary search golf, quickselect
+5. data structures — BST, heap, union-find, hash
+6. graphs — BFS/DFS golf, MST, Dijkstra, Edmonds–Karp max-flow
+7. dynamic programming — fib, coins, LCS, knapsack + exam
+8. greedy & strings — activity selection, Huffman, KMP, Rabin–Karp
+9. divide & conquer — closest pair, Karatsuba via Master Theorem
+10. NP-completeness — SAT≤3-SAT≤CLIQUE≤VERTEX-COVER walkthroughs
+11. randomized / flow theory — Las Vegas vs Monte Carlo, max-flow exam
+
+Theory packs: `lesson asymptotics|recurrences|sorting|linearSorts|…`  
+Analysis quizzes: `quiz asymptotics|recurrences|sorting|ds|graphs|dp|greedy|np|flow`
 
 ## Architecture
 

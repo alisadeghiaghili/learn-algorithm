@@ -3,6 +3,8 @@ import { SandboxState } from '../engine/SandboxState.js';
 import { dispatch, graphPresets } from '../engine/commands.js';
 import { buildAutoFrames, playerMove } from '../engine/moves.js';
 import { ArrayViz, GraphViz, MatrixViz } from '../viz/visualizers.js';
+import { ExtraViz } from '../viz/extraViz.js';
+import { lessons, analysisQuizzes } from '../theory/lessons.js';
 import {
   sequences,
   sequenceOrder,
@@ -50,6 +52,7 @@ export class App {
       array: new ArrayViz(this.dom.stage),
       graph: new GraphViz(this.dom.stage),
       matrix: new MatrixViz(this.dom.stage),
+      extra: new ExtraViz(this.dom.stage),
     };
 
     this.engine.onChange(() => this.render());
@@ -322,7 +325,8 @@ export class App {
     if (setup.sorted) s.sorted = setup.sorted.slice();
     if (setup.target !== undefined) s.target = setup.target;
     if (setup.graph === null && s.kind === 'graph') {
-      s.graph = graphPresets().star;
+      s.graph = s.mode === 'flow' ? graphPresets().diamond : graphPresets().star;
+      if (s.mode === 'flow') s.graph.directed = true;
     } else if (setup.graph) {
       s.graph = setup.graph;
     }
@@ -331,7 +335,7 @@ export class App {
       // keep existing
     }
     if (s.kind === 'graph' && !s.graph.nodes.length) {
-      s.graph = graphPresets().star;
+      s.graph = s.mode === 'flow' ? graphPresets().diamond : graphPresets().star;
     }
   }
 
@@ -409,16 +413,11 @@ export class App {
     const [q, choice] = args;
     const answers = this.state.meta.answers || (this.state.meta.answers = {});
     answers[String(q)] = String(choice).toLowerCase();
-    const correct = QUIZ_ANSWERS[q];
-    const ok = answers[String(q)] === correct;
     this.moves += 1;
-    this.log(
-      `Q${q} → ${choice} ${ok ? 'correct' : `wrong (expected ${correct})`}`,
-      ok ? 'ok' : 'err',
-    );
+    this.log(`Q${q} → ${choice}`, 'out');
     this.engine.pushFrame({
       type: 'info',
-      message: `quiz Q${q} = ${choice}`,
+      message: `answer ${q} = ${choice}`,
     });
     this.checkWin();
     this.render();
@@ -433,6 +432,64 @@ export class App {
     const delta = this.moves - par;
     const rank = delta <= 0 ? 'under/equal par' : `+${delta} over par`;
     this.log(`golf: ${this.moves} moves · par ${par} · ${rank}`, delta <= 0 ? 'ok' : 'out');
+  }
+
+  showLesson(key) {
+    const html = lessons[key];
+    if (!html) {
+      this.log(`lesson not found: ${key}`, 'err');
+      this.log(`try: ${Object.keys(lessons).join(' | ')}`, 'out');
+      return;
+    }
+    this.dom.sidePanel.hidden = false;
+    this.dom.workspace.classList.add('has-side');
+    this.dom.sideKicker.textContent = 'theory';
+    this.dom.sideTitle.textContent = key;
+    this.dom.sideBody.innerHTML = html;
+    this.dom.sideGoal.textContent = `lesson pack · ${key}`;
+    this.log(`lesson: ${key}`, 'sys');
+  }
+
+  showLessonQuiz(key) {
+    const bank = analysisQuizzes[key];
+    if (!bank) {
+      this.log(`quiz bank not found: ${key}`, 'err');
+      return;
+    }
+    this.dom.sidePanel.hidden = false;
+    this.dom.workspace.classList.add('has-side');
+    this.dom.sideKicker.textContent = 'analysis quiz';
+    this.dom.sideTitle.textContent = key;
+    this.dom.sideBody.innerHTML = bank
+      .map(
+        (q) =>
+          `<div style="margin-bottom:14px" data-qid="${q.id}">` +
+          `<div style="margin-bottom:6px"><strong>${escapeHtml(q.prompt)}</strong></div>` +
+          `<div class="tabs">` +
+          Object.entries(q.choices)
+            .map(
+              ([c, text]) =>
+                `<button type="button" class="tab" data-quiz="${q.id}" data-choice="${c}">${c}) ${escapeHtml(text)}</button>`,
+            )
+            .join('') +
+          `</div><div class="q-feedback" style="font-family:var(--font-mono);font-size:11px;color:var(--muted)"></div></div>`,
+      )
+      .join('');
+    this.dom.sideBody.querySelectorAll('[data-quiz]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-quiz');
+        const choice = btn.getAttribute('data-choice');
+        const item = bank.find((x) => x.id === id);
+        const ok = item && item.answer === choice;
+        const fb = btn.closest('[data-qid]')?.querySelector('.q-feedback');
+        if (fb) {
+          fb.textContent = ok ? `correct — ${item.why}` : `wrong — ${item.why}`;
+          fb.style.color = ok ? 'var(--settle)' : 'var(--alert)';
+        }
+        if (ok) this.toast('correct');
+      });
+    });
+    this.log(`analysis quiz: ${key}`, 'sys');
   }
 
   buildLevel() {
@@ -556,20 +613,28 @@ export class App {
   render() {
     const frame = this.engine.current();
     const kind = this.state.kind;
-    const viz = this.viz.array;
-    let targetViz = this.viz.array;
-    if (kind === 'graph') targetViz = this.viz.graph;
-    else if (kind === 'matrix') targetViz = this.viz.matrix;
-    else targetViz = this.viz.array;
 
-    targetViz.render(frame, {
-      array: this.state.array,
-      target: this.state.target,
-      graph: this.state.graph,
-    });
+    const handled = frame?.extra?.kind ? this.viz.extra.render(frame, this.state) : false;
+    if (!handled) {
+      let targetViz = this.viz.array;
+      if (kind === 'graph') targetViz = this.viz.graph;
+      else if (kind === 'matrix') targetViz = this.viz.matrix;
+      else targetViz = this.viz.array;
 
-    // legend
-    const items = targetViz.legend();
+      targetViz.render(frame, {
+        array: this.state.array,
+        target: this.state.target,
+        graph: this.state.graph,
+      });
+    }
+
+    const items = handled
+      ? this.viz.extra.legend()
+      : kind === 'graph'
+        ? this.viz.graph.legend()
+        : kind === 'matrix'
+          ? this.viz.matrix.legend()
+          : this.viz.array.legend();
     this.dom.legend.innerHTML = items
       .map(
         ([name, color]) =>
@@ -586,8 +651,13 @@ export class App {
 
     if (this.mode === 'sandbox') {
       const algo = `${this.state.mode}:${this.state.algo}`;
-      this.dom.stageTitle.textContent =
-        kind === 'array' ? `Array · ${algo}` : kind === 'graph' ? `Graph · ${algo}` : `DP · ${algo}`;
+      const titles = {
+        array: `Array · ${algo}`,
+        graph: `Graph · ${algo}`,
+        matrix: `DP · ${algo}`,
+        tree: `Structure · ${algo}`,
+      };
+      this.dom.stageTitle.textContent = titles[kind] || `Lab · ${algo}`;
       this.dom.stageSub.textContent =
         'Commands mutate state. `run` generates steps. `levels` for the course.';
     }
