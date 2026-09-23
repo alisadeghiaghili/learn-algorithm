@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LearnAlgo — interactive algorithm tutorial</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="topbar" id="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">λ</span>
+          <span class="brand-name">LearnAlgo</span>
+        </div>
+        <div class="topbar-meta">
+          <span class="mode-chip" id="mode-chip">sandbox</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="level-label" id="level-label">free play</span>
+        </div>
+        <div class="topbar-stats">
+          <div class="stat" title="moves used in this level">
+            <span class="stat-label">moves</span>
+            <span class="stat-value" id="stat-moves">0</span>
+          </div>
+          <div class="stat" title="best (par) for this level">
+            <span class="stat-label">par</span>
+            <span class="stat-value" id="stat-par">—</span>
+          </div>
+          <div class="stat" title="steps executed by the engine">
+            <span class="stat-label">steps</span>
+            <span class="stat-value" id="stat-steps">0</span>
+          </div>
+        </div>
+        <nav class="topbar-actions">
+          <button type="button" class="btn ghost" id="btn-levels" title="Browse levels">levels</button>
+          <button type="button" class="btn ghost" id="btn-sandbox" title="Sandbox mode">sandbox</button>
+          <button type="button" class="btn ghost" id="btn-help" title="Command help">help</button>
+        </nav>
+      </header>
+
+      <main class="workspace">
+        <section class="stage-panel" aria-label="Visualization stage">
+          <div class="stage-header">
+            <h1 class="stage-title" id="stage-title">Array · bubble sort</h1>
+            <p class="stage-sub" id="stage-sub">Type commands below. Try <code>help</code> or <code>levels</code>.</p>
+          </div>
+          <div class="stage" id="stage">
+            <!-- visualizers mount here -->
+          </div>
+          <div class="legend" id="legend" aria-hidden="true"></div>
+        </section>
+
+        <aside class="side-panel" id="side-panel" hidden>
+          <div class="side-card" id="side-card">
+            <div class="side-kicker" id="side-kicker">level</div>
+            <h2 class="side-title" id="side-title"></h2>
+            <div class="side-body" id="side-body"></div>
+            <div class="side-goal" id="side-goal"></div>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="dock">
+        <div class="console" id="console">
+          <div class="console-log" id="console-log" role="log" aria-live="polite"></div>
+          <form class="console-form" id="console-form" autocomplete="off">
+            <span class="prompt" aria-hidden="true">&gt;</span>
+            <input
+              class="console-input"
+              id="console-input"
+              type="text"
+              spellcheck="false"
+              aria-label="Command input"
+              placeholder="help · levels · array random 12 · set sort quick · run"
+            />
+          </form>
+        </div>
+        <div class="transport" id="transport">
+          <button type="button" class="btn icon" id="btn-reset" title="Reset (reset)">⟲</button>
+          <button type="button" class="btn icon" id="btn-undo" title="Undo last (undo)">↶</button>
+          <button type="button" class="btn icon" id="btn-step" title="Step once (step)">▮▶</button>
+          <button type="button" class="btn primary" id="btn-play" title="Play / pause (play)">play</button>
+          <label class="speed">
+            <span class="speed-label">speed</span>
+            <input type="range" id="speed" min="1" max="10" value="5" />
+          </label>
+        </div>
+      </footer>
+
+      <div class="modal-root" id="modal-root" hidden></div>
+      <div class="toast" id="toast" hidden></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

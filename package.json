@@ -1,0 +1,18 @@
+{
+  "name": "learn-algo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An interactive algorithm visualization and tutorial.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test tests/algorithms.test.js",
+    "test:smoke": "node tests/smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "vite": "^6.0.0"
+  }
+}
