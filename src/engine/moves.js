@@ -15,6 +15,7 @@ import { PEAK } from '../algorithms/peak.js';
 import { GADGETS } from '../algorithms/gadgets.js';
 import { createProofSession, proofFrames, proofBanks } from '../algorithms/proofEngine.js';
 import { masteryBanks, gradeMastery } from '../curriculum/mastery.js';
+import { proofWritingTasks, gradeProofDraft } from '../algorithms/proofWriter.js';
 
 /**
  * Auto runners keyed by mode:algo
@@ -171,6 +172,27 @@ export function buildAutoFrames(state) {
     state.meta.masteryScore = 0;
     state.meta.masteryDone = false;
     return masteryFrames(state, 0, null);
+  }
+  if (mode === 'prooWrite' || mode === 'proofWrite' || mode === 'write') {
+    const taskId = state.meta.taskId || state.algo || 'write-insertion';
+    const task = proofWritingTasks[taskId] || proofWritingTasks['write-insertion'];
+    state.meta.proofTaskId = task.id;
+    state.meta.proofDraft = {};
+    state.meta.proofStatus = {};
+    state.meta.proofWriteDone = false;
+    return [
+      {
+        type: 'info',
+        message: `proof writer: ${task.title}`,
+        extra: {
+          kind: 'prooWrite',
+          title: task.title,
+          fields: task.fields.map((f) => ({ id: f.id, label: f.label, hint: f.hint })),
+          status: {},
+          setup: task.setup,
+        },
+      },
+    ];
   }
 
   return [
@@ -350,6 +372,9 @@ export function playerMove(name, args, state) {
       if (state.mode === 'mastery') {
         return masterySubmit(state, rest || q);
       }
+      if (state.mode === 'prooWrite' || state.mode === 'proofWrite' || state.mode === 'write') {
+        return proofWriteSubmit(state, args);
+      }
       // proof session path
       if (state.meta._proofSession || state.mode === 'proof') {
         return proofSubmit(state, choice || q);
@@ -361,6 +386,10 @@ export function playerMove(name, args, state) {
         message: `answer ${q} → ${choice}`,
         extra: { kind: 'np', title: 'quiz', step: 0, total: 0, answers },
       };
+    }
+    case 'field': {
+      // field <id> <text...> for proof writer
+      return proofWriteSubmit(state, args);
     }
     case 'insert':
     case 'bst': {
@@ -378,6 +407,45 @@ export function playerMove(name, args, state) {
 
 function valid(i, n) {
   return Number.isInteger(i) && i >= 0 && i < n;
+}
+
+/**
+ * field init "text..." — grade structured proof field.
+ */
+function proofWriteSubmit(state, args) {
+  const taskId = state.meta.proofTaskId || 'write-insertion';
+  const task = proofWritingTasks[taskId];
+  if (!task) throw new Error('unknown proof task');
+  const fieldId = args[0];
+  const text = args.slice(1).join(' ');
+  const field = task.fields.find((f) => f.id === fieldId);
+  if (!field) {
+    throw new Error(`usage: field <${task.fields.map((f) => f.id).join('|')}> <text>`);
+  }
+  const draft = state.meta.proofDraft || (state.meta.proofDraft = {});
+  const status = state.meta.proofStatus || (state.meta.proofStatus = {});
+  draft[fieldId] = text;
+  const graded = gradeProofDraft(task, draft);
+  for (const [id, r] of Object.entries(graded.results)) status[id] = r.ok;
+  const thisR = graded.results[fieldId];
+  state.meta.proofWriteDone = graded.ok;
+
+  return {
+    type: thisR.ok ? 'set' : 'error',
+    message: thisR.ok
+      ? `✓ field ${fieldId} accepted`
+      : `✗ field ${fieldId}: ${thisR.why}`,
+    extra: {
+      kind: 'prooWrite',
+      title: task.title,
+      fields: task.fields.map((f) => ({ id: f.id, label: f.label, hint: f.hint })),
+      status: { ...status },
+      fieldId,
+      feedback: thisR.why,
+      ok: thisR.ok,
+      allOk: graded.ok,
+    },
+  };
 }
 
 function masterySubmit(state, input) {

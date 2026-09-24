@@ -188,6 +188,7 @@ export function dispatch(ctx, raw) {
     case 'drop':
     case 'setdp':
     case 'answer':
+    case 'field':
     case 'insert':
     case 'bst':
       app.playerMove(name, args);
@@ -275,6 +276,7 @@ function handleSet(ctx, args) {
     random: ['freivalds', 'mc'],
     proof: ['insertion-invariant', 'binary-invariant', 'dijkstra-invariant', 'greedy-exchange', 'np-reduction', 'master-thm', 'amortized-potential', 'lower-bound'],
     mastery: ['asymptotics', 'recurrences', 'sorting', 'searching', 'structures', 'graphs', 'dp', 'greedy', 'dc', 'strings', 'np', 'randomized', 'proofs'],
+    write: ['write-insertion', 'write-dijkstra', 'write-greedy-exchange', 'write-np-reduction', 'write-master-subst'],
   };
   if (!map[domain] || !map[domain].includes(name)) {
     ctx.log(`usage: set ${domain} ${map[domain] ? map[domain].join('|') : '…'}`, 'err');
@@ -292,7 +294,7 @@ function handleSet(ctx, args) {
     else if (!ctx.state.graph?.nodes?.length) ctx.state.graph = graphPresets().star;
   }
   if (domain === 'dp') ctx.state.kind = 'matrix';
-  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory' || domain === 'random' || domain === 'proof' || domain === 'mastery') {
+  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory' || domain === 'random' || domain === 'proof' || domain === 'mastery' || domain === 'write') {
     ctx.state.kind = 'tree';
   }
   if (domain === 'flow') {

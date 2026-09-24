@@ -23,9 +23,12 @@ const C = {
 /**
  * Multi-kind visualizer dispatcher for advanced extras.
  */
+import { PreciseViz } from './preciseViz.js';
+
 export class ExtraViz {
   constructor(root) {
     this.root = root;
+    this.precise = new PreciseViz(root);
   }
 
   /**
@@ -37,6 +40,8 @@ export class ExtraViz {
     const extra = frame?.extra || state.meta?.viz || null;
     const kind = extra?.kind;
     if (!kind) return false;
+    // precise layer first
+    if (this.precise.render(frame)) return true;
     switch (kind) {
       case 'tree':
         this.tree(extra, frame);

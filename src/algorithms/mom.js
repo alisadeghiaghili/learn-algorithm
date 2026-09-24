@@ -1,5 +1,5 @@
 /**
- * Median of Medians (BFPRT) deterministic selection — worst-case O(n).
+ * Precise MOM visualizer payload builder + upgraded MOM frames for clear grouping.
  */
 
 /**
@@ -9,28 +9,56 @@
 export function medianOfMediansSelect(input, k = 0) {
   const a = input.slice();
   const frames = [];
-  frames.push({
-    type: 'info',
-    array: a.slice(),
-    message: `Median-of-Medians select k=${k} · worst-case Θ(n)`,
-    extra: { kind: 'mom', k, groups: [], median: null },
+
+  /**
+   * @param {string} message
+   * @param {object} extra
+   */
+  function push(type, message, extra) {
+    frames.push({ type, message, array: a.slice(), ...extra });
+  }
+
+  push('info', `MOM select k=${k} · groups of 5 · worst-case Θ(n)`, {
+    extra: {
+      kind: 'mom',
+      k,
+      groups: [],
+      median: null,
+      medIdx: [],
+      pivot: null,
+      lo: 0,
+      hi: a.length - 1,
+    },
   });
 
+  /**
+   * @param {number[]} arr
+   * @param {number} lo
+   * @param {number} hi
+   * @param {number} kk
+   */
   function select(arr, lo, hi, kk) {
     const n = hi - lo + 1;
     if (n <= 5) {
       const slice = arr.slice(lo, hi + 1).sort((x, y) => x - y);
       for (let i = 0; i < slice.length; i += 1) arr[lo + i] = slice[i];
-      frames.push({
-        type: 'set',
-        array: arr.slice(),
+      push('set', `small window [${lo}..${hi}] sorted → ${arr[lo + kk]}`, {
         range: [lo, hi],
-        message: `small window [${lo}..${hi}] sorted brute-force`,
-        extra: { kind: 'mom', k, groups: [[lo, hi]], median: arr[lo + kk] },
+        extra: {
+          kind: 'mom',
+          k,
+          groups: [[lo, hi]],
+          median: arr[lo + kk],
+          medIdx: [lo + kk],
+          lo,
+          hi,
+          phase: 'small',
+        },
       });
       return arr[lo + kk];
     }
 
+    /** @type {[number, number][]} */
     const groups = [];
     for (let i = lo; i <= hi; i += 5) {
       const end = Math.min(i + 4, hi);
@@ -38,44 +66,70 @@ export function medianOfMediansSelect(input, k = 0) {
       for (let j = 0; j < chunk.length; j += 1) arr[i + j] = chunk[j];
       groups.push([i, end]);
     }
-    frames.push({
-      type: 'range',
-      array: arr.slice(),
+    push('range', `group into 5s & sort each · ${groups.length} groups`, {
       range: [lo, hi],
-      message: `group into 5s and sort each (${groups.length} groups)`,
-      extra: { kind: 'mom', k, groups: groups.map((g) => g.slice()), median: null },
+      extra: {
+        kind: 'mom',
+        k,
+        groups: groups.map((g) => g.slice()),
+        medIdx: [],
+        lo,
+        hi,
+        phase: 'groups',
+      },
     });
 
     const medIdx = [];
-    for (let g = 0; g < groups.length; g += 1) {
-      const [gs, ge] = groups[g];
-      const mid = gs + ((ge - gs) >> 1);
-      medIdx.push(mid);
+    for (const [gs, ge] of groups) {
+      medIdx.push(gs + ((ge - gs) >> 1));
     }
-    frames.push({
-      type: 'info',
-      array: arr.slice(),
-      message: `take each group's median: ${medIdx.map((i) => arr[i]).join(', ')}`,
-      extra: { kind: 'mom', k, groups: groups.map((g) => g.slice()), median: null, medIdx: medIdx.slice() },
+    push('info', `group medians at ${medIdx.map((i) => `${i}:${arr[i]}`).join(' ')}`, {
+      range: [lo, hi],
+      extra: {
+        kind: 'mom',
+        k,
+        groups: groups.map((g) => g.slice()),
+        medIdx: medIdx.slice(),
+        lo,
+        hi,
+        phase: 'medians',
+      },
     });
 
-    // move medians to front of range for recursive call
     for (let i = 0; i < medIdx.length; i += 1) {
-      const tmp = arr[lo + i];
+      const t = arr[lo + i];
       arr[lo + i] = arr[medIdx[i]];
-      arr[medIdx[i]] = tmp;
+      arr[medIdx[i]] = t;
     }
+    push('swap', `move medians to front of [${lo}..${hi}]`, {
+      range: [lo, hi],
+      extra: {
+        kind: 'mom',
+        k,
+        groups: groups.map((g) => g.slice()),
+        medIdx: medIdx.map((i) => lo + i),
+        lo,
+        hi,
+        phase: 'gather',
+      },
+    });
+
     const mom = select(arr, lo, lo + medIdx.length - 1, medIdx.length >> 1);
-    frames.push({
-      type: 'pivot',
-      array: arr.slice(),
+    push('pivot', `median-of-medians pivot = ${mom}`, {
       range: [lo, hi],
       pivot: arr.indexOf(mom),
-      message: `median-of-medians pivot = ${mom}`,
-      extra: { kind: 'mom', k, groups: groups.map((g) => g.slice()), median: mom },
+      extra: {
+        kind: 'mom',
+        k,
+        groups: groups.map((g) => g.slice()),
+        median: mom,
+        pivot: mom,
+        lo,
+        hi,
+        phase: 'pivot',
+      },
     });
 
-    // partition around mom
     let p = lo;
     for (let i = lo; i <= hi; i += 1) {
       if (arr[i] < mom) {
@@ -85,7 +139,6 @@ export function medianOfMediansSelect(input, k = 0) {
         p += 1;
       }
     }
-    // place mom at p
     let mi = p;
     for (let i = p; i <= hi; i += 1) {
       if (arr[i] === mom) {
@@ -95,44 +148,49 @@ export function medianOfMediansSelect(input, k = 0) {
     }
     arr[mi] = arr[p];
     arr[p] = mom;
-    frames.push({
-      type: 'swap',
-      array: arr.slice(),
+    push('swap', `partition around ${mom} at ${p} · |left|=${p - lo} |right|=${hi - p}`, {
       range: [lo, hi],
       pivot: p,
-      message: `partition around ${mom} at index ${p}`,
-      extra: { kind: 'mom', k, groups: groups.map((g) => g.slice()), median: mom },
+      extra: {
+        kind: 'mom',
+        k,
+        groups: groups.map((g) => g.slice()),
+        median: mom,
+        pivot: mom,
+        lo,
+        hi,
+        phase: 'partition',
+        left: [lo, p - 1],
+        right: [p + 1, hi],
+      },
     });
 
     const left = p - lo;
     if (kk === left) return arr[p];
     if (kk < left) {
-      frames.push({
-        type: 'info',
-        array: arr.slice(),
+      push('info', `k=${kk} is left of pivot · recurse [${lo}..${p - 1}]`, {
         range: [lo, p - 1],
-        message: `k=${kk} is left of pivot · recurse left`,
-        extra: { kind: 'mom', k, median: mom },
+        extra: { kind: 'mom', k, median: mom, lo, hi: p - 1, phase: 'left' },
       });
       return select(arr, lo, p - 1, kk);
     }
-    frames.push({
-      type: 'info',
-      array: arr.slice(),
+    push('info', `k=${kk} is right of pivot · recurse [${p + 1}..${hi}]`, {
       range: [p + 1, hi],
-      message: `k=${kk} is right of pivot · recurse right`,
-      extra: { kind: 'mom', k, median: mom },
+      extra: { kind: 'mom', k, median: mom, lo: p + 1, hi, phase: 'right' },
     });
     return select(arr, p + 1, hi, kk - left - 1);
   }
 
   const val = select(a, 0, a.length - 1, Math.min(k, a.length - 1));
-  frames.push({
-    type: 'done',
-    array: a.slice(),
+  push('done', `a[${k}] = ${val} · 30/70 split ⇒ T(n)=T(n/5)+T(7n/10)+O(n)`, {
     sorted: [a.indexOf(val)],
-    message: `a[${k}] = ${val} · worst-case Θ(n) because |left|,|right| ≤ 0.7n`,
-    extra: { kind: 'mom', k, found: a.indexOf(val), median: val },
+    extra: {
+      kind: 'mom',
+      k,
+      found: a.indexOf(val),
+      median: val,
+      phase: 'done',
+    },
   });
   return frames;
 }

@@ -310,6 +310,23 @@ export const lessons = {
     <p><strong>Match rule.</strong> Walk P along edges; success iff the walk consumes all of P.</p>
     <p><strong>Exam skill.</strong> Draw the tree for T="banana$" and locate "ana".</p>
   `,
+
+  proofsFull: `
+    <p><strong>Insertion sort — full correctness.</strong></p>
+    <p><em>Invariant.</em> At the start of each iteration of j = 2..n, the subarray A[1..j-1] is sorted and is a permutation of the original A[1..j-1].</p>
+    <ol>
+      <li><strong>Initialization.</strong> j=2: A[1..1] is a single element — sorted; a permutation of itself.</li>
+      <li><strong>Maintenance.</strong> Assume invariant for j. Key = A[j]. We shift A[j-1], A[j-2], … right while &gt; key, then write key. A[1..j] is sorted. We only permuted A[1..j], so the multiset equals the original. Invariant holds for j+1.</li>
+      <li><strong>Termination.</strong> j = n+1 ⇒ A[1..n] sorted and a permutation of the input. ∎</li>
+    </ol>
+    <p><strong>Dijkstra — settle proof (with cases).</strong></p>
+    <p>Let u be extracted with minimum dist. Let P = s ⇝ u be a true shortest path. Let y be the first unsettled node on P when u is extracted; x = pred(y) on P. By induction on settle order dist[x] is final. Then dist[y] ≤ dist[x]+w(x,y) = δ(s,y) ≤ δ(s,u). If y = u, dist[u] is final. If y ≠ u, then either y was already settled (then y is before u on P and we reduce), or y ∈ PQ with key ≤ dist[u] — extract-min would have returned y, contradiction. Non-negativity is required for the settle-once induction. ∎</p>
+    <p><strong>Activity selection — full exchange.</strong></p>
+    <p>Let g = first activity to finish. Let OPT be a max-size compatible set. If g ∈ OPT, induct on residual I' (activities compatible with g). If g ∉ OPT, let a = OPT’s first job. f(g) ≤ f(a) ⇒ OPT' = (OPT ∖ {a}) ∪ {g} is compatible and |OPT'| = |OPT|. Then a max set containing g exists; induct on |I|. ∎</p>
+    <p><strong>3-SAT ≤_p CLIQUE — both directions.</strong> See lesson npGadget. Construction is polynomial (O(m²) edges). (⇒) assignment → clique by picking one true literal per clause. (⇐) clique of size m uses one node per group; no complement edges ⇒ consistent assignment. ∎</p>
+    <p><strong>Substitution for T(n)=2T(n/2)+n.</strong> Guess T(n) ≤ cn log n. T(n) ≤ 2c(n/2)log(n/2)+n = cn log n − cn + n ≤ cn log n for c ≥ 1. Base cases with constant shift. For Θ also prove Ω(n log n) via decision-tree or recurrence. ∎</p>
+    <p><strong>Lower bound.</strong> Comparison decision tree has ≥ n! leaves ⇒ height ≥ log₂ n! = Θ(n log n) (Stirling: log n! = n log n − n + O(log n)). ∎</p>
+  `,
 };
 
 /**

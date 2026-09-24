@@ -29,7 +29,7 @@ export const sequences = {
           '<p>Every algorithm is a sequence of <strong>steps</strong>: compare, swap, visit, relax.</p>' +
           '<ol><li><code>set sort bubble</code></li><li><code>run</code></li><li>play / step</li></ol>',
         goal: 'Run the algorithm once (`run`) and finish the animation.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+        win: sortedDone,
       },
       {
         id: 'intro-2',
@@ -181,7 +181,7 @@ export const sequences = {
         setup: { kind: 'array', mode: 'sort', algo: 'merge', array: [38, 27, 43, 3, 9, 82, 10], sorted: [] },
         intro: '<p>Divide &amp; conquer. Depth log n, work n per level.</p>',
         goal: 'Run merge sort to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 5,
+        win: sortedDone,
       },
       {
         id: 'sort-quick',
@@ -192,7 +192,7 @@ export const sequences = {
         setup: { kind: 'array', mode: 'sort', algo: 'quick', array: [9, 3, 7, 1, 8, 2, 5], sorted: [] },
         intro: '<p>Partition around pivot. Avg O(n log n), worst O(n²).</p>',
         goal: 'Run quicksort to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 5,
+        win: sortedDone,
       },
       {
         id: 'sort-heap',
@@ -203,7 +203,7 @@ export const sequences = {
         setup: { kind: 'array', mode: 'sort', algo: 'heap', array: [12, 3, 9, 1, 7, 4, 8], sorted: [] },
         intro: '<p>Θ(n log n) worst-case, in-place. Contrast with quicksort.</p>',
         goal: 'Run heap sort to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 5,
+        win: sortedDone,
       },
       {
         id: 'sort-counting',
@@ -216,7 +216,7 @@ export const sequences = {
           '<p><code>lesson linearSorts</code></p><p>Count → prefix → stable scatter.</p>' +
           '<p>Evades Ω(n log n) by using key values.</p>',
         goal: 'Run counting sort to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+        win: sortedDone,
       },
       {
         id: 'sort-radix',
@@ -227,7 +227,7 @@ export const sequences = {
         setup: { kind: 'array', mode: 'sort', algo: 'radix', array: [170, 45, 75, 90, 802, 24, 2, 66], sorted: [] },
         intro: '<p>O(d(n+k)). Must use a <em>stable</em> base sort.</p>',
         goal: 'Run radix sort to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+        win: sortedDone,
       },
       {
         id: 'sort-theory',
@@ -487,7 +487,7 @@ export const sequences = {
         intro:
           '<p>Settle-once invariant. Fails on negative edges.</p><p><code>set graph dijkstra</code> · <code>run</code></p><p><code>lesson shortestPaths</code></p>',
         goal: 'Run Dijkstra to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+        win: distDone,
       },
       {
         id: 'graph-mst-auto',
@@ -515,7 +515,7 @@ export const sequences = {
           '<p><code>lesson flow</code></p><p>Augment along BFS paths in the residual. Max-flow = min-cut.</p>' +
           '<p><code>set flow ek</code> · <code>run</code></p>',
         goal: 'Run Edmonds-Karp and read max-flow value.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.value != null),
+        win: valueDone,
       },
       {
         id: 'graph-bf',
@@ -530,7 +530,10 @@ export const sequences = {
           '<p>Allows negative weights. O(VE). Extra pass detects negative cycles.</p>' +
           '<p><code>set graph bellman</code> · <code>run</code></p><p><code>lesson shortestPaths</code></p>',
         goal: 'Run Bellman-Ford to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && f.extra?.dist && f.extra.dist[0] === 0);
+        },
       },
       {
         id: 'graph-fw',
@@ -543,7 +546,10 @@ export const sequences = {
         },
         intro: '<p>dp[k][i][j] = best path with intermediates ≤ k. Watch the table fill.</p>',
         goal: 'Run Floyd-Warshall to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && Array.isArray(f.extra?.dist));
+        },
       },
       {
         id: 'graph-topo',
@@ -556,7 +562,10 @@ export const sequences = {
         },
         intro: '<p>DAG ⇔ topo order exists. Kahn emits indegree-0 nodes.</p><p><code>lesson graphsTheory</code></p>',
         goal: 'Run topological sort to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.order?.length),
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && f.extra?.ok === true && f.extra.order.length >= 4);
+        },
       },
       {
         id: 'graph-scc',
@@ -569,7 +578,10 @@ export const sequences = {
         },
         intro: '<p>Condensation of SCCs is a DAG. O(V+E).</p>',
         goal: 'Run Kosaraju to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.comps?.length),
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && Array.isArray(f.extra?.comps) && f.extra.comps.length >= 1);
+        },
       },
       {
         id: 'graph-theory',
@@ -605,7 +617,10 @@ export const sequences = {
         setup: { kind: 'matrix', mode: 'dp', algo: 'fib', array: [], meta: {} },
         intro: '<p><code>lesson dpTheory</code></p><p>dp[i]=dp[i−1]+dp[i−2]. O(n) time/space.</p>',
         goal: 'Run fib DP to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && /fib\(\d+\) = \d+/.test(f.message));
+        },
       },
       {
         id: 'dp-coin',
@@ -616,7 +631,10 @@ export const sequences = {
         setup: { kind: 'matrix', mode: 'dp', algo: 'coin', array: [], meta: {} },
         intro: '<p>dp[x]=1+min_c dp[x−c]. Greedy by largest coin is <em>wrong</em> for {1,3,4}, amount 6.</p>',
         goal: 'Run coin change to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && /min coins for/.test(f.message));
+        },
       },
       {
         id: 'dp-lcs',
@@ -627,7 +645,10 @@ export const sequences = {
         setup: { kind: 'matrix', mode: 'dp', algo: 'lcs', array: [], meta: {} },
         intro: '<p>Match → diag+1; else max(top,left). O(mn).</p>',
         goal: 'Run LCS to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && /LCS length = \d+/.test(f.message));
+        },
       },
       {
         id: 'dp-knap',
@@ -638,7 +659,10 @@ export const sequences = {
         setup: { kind: 'matrix', mode: 'dp', algo: 'knapsack', array: [], meta: {} },
         intro: '<p>Guess: take item i or skip. Pseudo-polynomial in W.</p>',
         goal: 'Run knapsack to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && /best value = \d+/.test(f.message));
+        },
       },
       {
         id: 'dp-rod',
@@ -649,7 +673,10 @@ export const sequences = {
         setup: { kind: 'matrix', mode: 'dp', algo: 'rod', array: [], meta: {} },
         intro: '<p>dp[i] = max_{j≤i} (p[j] + dp[i−j]). Classic 1D DP.</p>',
         goal: 'Run rod cutting to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && /best revenue = \d+/.test(f.message));
+        },
       },
       {
         id: 'dp-chain',
@@ -660,7 +687,10 @@ export const sequences = {
         setup: { kind: 'matrix', mode: 'dp', algo: 'chain', array: [], meta: {} },
         intro: '<p>cost[i][j] = min_k cost[i][k]+cost[k+1][j]+p_{i-1}p_k p_j.</p>',
         goal: 'Run matrix-chain to completion.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+        win: (ctx) => {
+          const f = ctx.engine.frames.at(-1);
+          return !!(f && f.type === 'done' && /min multiplications = \d+/.test(f.message));
+        },
       },
       {
         id: 'dp-theory',
@@ -1342,6 +1372,79 @@ export const sequences = {
         goal: `Perfect score on mastery bank “${unit}”.`,
         win: (ctx) => ctx.state.meta.masteryDone === true,
       })),
+      {
+        id: 'write-insertion',
+        name: 'Write: insertion proof',
+        desc: 'Init / maintenance / termination',
+        par: 3,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'write', algo: 'write-insertion', array: [],
+          meta: { taskId: 'write-insertion', proofStatus: {}, proofDraft: {} },
+        },
+        intro:
+          '<p><code>set write write-insertion</code> · <code>run</code></p>' +
+          '<p>Then for each field: <code>field init "prefix sorted and permutation"</code></p>' +
+          '<p>Keyword-checked structured proof (not MCQ). See <code>lesson proofsFull</code>.</p>',
+        goal: 'All three proof fields accepted.',
+        win: (ctx) => ctx.state.meta.proofWriteDone === true,
+      },
+      {
+        id: 'write-dijkstra',
+        name: 'Write: Dijkstra settle',
+        desc: 'Assumption / invariant / contradiction',
+        par: 3,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'write', algo: 'write-dijkstra', array: [],
+          meta: { taskId: 'write-dijkstra', proofStatus: {}, proofDraft: {} },
+        },
+        intro: '<p>Prove settle-once. Include non-negativity and the exchange/contradiction case.</p>',
+        goal: 'All three fields accepted.',
+        win: (ctx) => ctx.state.meta.proofWriteDone === true,
+      },
+      {
+        id: 'write-greedy',
+        name: 'Write: exchange argument',
+        desc: 'Activity selection optimality',
+        par: 3,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'write', algo: 'write-greedy-exchange', array: [],
+          meta: { taskId: 'write-greedy-exchange', proofStatus: {}, proofDraft: {} },
+        },
+        intro: '<p>Greedy choice + replace OPT’s first job + induction on residual.</p>',
+        goal: 'All three fields accepted.',
+        win: (ctx) => ctx.state.meta.proofWriteDone === true,
+      },
+      {
+        id: 'write-np',
+        name: 'Write: 3-SAT ≤ CLIQUE',
+        desc: 'Construction + both directions',
+        par: 3,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'write', algo: 'write-np-reduction', array: [],
+          meta: { taskId: 'write-np-reduction', proofStatus: {}, proofDraft: {} },
+        },
+        intro: '<p>Polynomial construction + soundness + completeness.</p>',
+        goal: 'All three fields accepted.',
+        win: (ctx) => ctx.state.meta.proofWriteDone === true,
+      },
+      {
+        id: 'write-subst',
+        name: 'Write: substitution',
+        desc: 'T(n)=2T(n/2)+n = O(n log n)',
+        par: 3,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'write', algo: 'write-master-subst', array: [],
+          meta: { taskId: 'write-master-subst', proofStatus: {}, proofDraft: {} },
+        },
+        intro: '<p>IH + plug-in algebra + base-case constant shift.</p>',
+        goal: 'All three fields accepted.',
+        win: (ctx) => ctx.state.meta.proofWriteDone === true,
+      },
     ],
   },
 };
@@ -1383,6 +1486,32 @@ function isSorted(arr) {
     if (arr[i - 1] > arr[i]) return false;
   }
   return arr.length > 0;
+}
+
+/** Strict: animation finished AND final frame proves the contract. */
+function sortedDone(ctx) {
+  const f = ctx.engine.frames.at(-1);
+  return !!(f && f.type === 'done' && f.array && isSorted(f.array));
+}
+
+function ranDone(ctx) {
+  const f = ctx.engine.frames.at(-1);
+  return !!(f && f.type === 'done' && ctx.engine.frames.length >= 4);
+}
+
+function distDone(ctx) {
+  const f = ctx.engine.frames.at(-1);
+  return !!(f && f.type === 'done' && f.extra?.dist && f.extra.dist[0] === 0);
+}
+
+function valueDone(ctx) {
+  const f = ctx.engine.frames.at(-1);
+  return !!(f && f.type === 'done' && f.extra?.value != null);
+}
+
+function treeDone(ctx) {
+  const f = ctx.engine.frames.at(-1);
+  return !!(f && f.type === 'done' && f.extra?.tree != null);
 }
 
 function isBfsOrder(ctx) {

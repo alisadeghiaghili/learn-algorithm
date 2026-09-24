@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/algorithms.test.js tests/extras.test.js tests/depth.test.js tests/peak.test.js tests/correctness.test.js tests/correctness-audit.test.js",
+    "test": "node --test tests/algorithms.test.js tests/extras.test.js tests/depth.test.js tests/peak.test.js tests/correctness.test.js tests/correctness-audit.test.js tests/writer-viz.test.js",
     "test:smoke": "node tests/smoke.mjs"
   },
   "devDependencies": {
