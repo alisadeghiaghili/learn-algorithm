@@ -1212,16 +1212,16 @@ export const sequences = {
       {
         id: 'peak-fft',
         name: 'Polynomial multiply / FFT',
-        desc: 'Naive O(n²) vs butterfly',
+        desc: 'Real Cooley–Tukey + iFFT',
         par: 1,
         kind: 'tutorial',
         setup: {
           kind: 'tree', mode: 'dc', algo: 'fft', array: [],
           meta: { pa: [1, 2, 3], pb: [4, 5, 6] },
         },
-        intro: '<p><code>lesson fft</code></p><p>Pad to 2^k, butterfly layers, pointwise mul, iFFT.</p>',
-        goal: 'Run poly multiply + FFT narrative.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.stage === 'done'),
+        intro: '<p><code>lesson fft</code></p><p>Complex butterfly FFT. Ground-truth naive product must match.</p>',
+        goal: 'Run real FFT multiply — product must match naive.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.match === true),
       },
       {
         id: 'peak-matroid',
@@ -1252,31 +1252,31 @@ export const sequences = {
       },
       {
         id: 'peak-rb',
-        name: 'Red-Black insert',
-        desc: 'Recolor + rotations',
+        name: 'Red-Black CLRS insert',
+        desc: 'Full INSERT-FIXUP cases 1–4',
         par: 1,
         kind: 'tutorial',
         setup: {
           kind: 'tree', mode: 'ds', algo: 'rb', array: [],
           meta: { keys: [10, 20, 30, 15, 25] },
         },
-        intro: '<p><code>lesson rbtree</code></p><p>4 properties. Height ≤ 2 log(n+1).</p>',
-        goal: 'Run RB inserts and see a rotation/recolor.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.rotate || f.extra?.done),
+        intro: '<p><code>lesson rbtree</code></p><p>Uncle red / triangle / line. Properties 1–4 enforced.</p>',
+        goal: 'Run CLRS RB insert — fixup cases must fire.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.case === 1 || f.extra?.case === 2 || f.extra?.case === 3),
       },
       {
         id: 'peak-stree',
-        name: 'Suffix tree match',
-        desc: 'Walk pattern in tree',
+        name: 'Compacted suffix tree',
+        desc: 'Edge labels = substrings',
         par: 1,
         kind: 'tutorial',
         setup: {
           kind: 'tree', mode: 'string', algo: 'stree', array: [],
           meta: { text: 'banana', pat: 'ana' },
         },
-        intro: '<p><code>lesson suffixTree</code></p><p>Compacted trie of suffixes. Match O(|P|).</p>',
-        goal: 'Run suffix-tree match.',
-        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.match != null),
+        intro: '<p><code>lesson suffixTree</code></p><p>Real compacted tree (edge labels). Match O(|P|).</p>',
+        goal: 'Run suffix-tree match on banana/ana.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.match === 1),
       },
       {
         id: 'peak-exam',
@@ -1303,6 +1303,47 @@ export const sequences = {
       },
     ],
   },
+
+  mastery: {
+    name: 'mastery drills',
+    blurb: 'Exam-level fills per unit — tight bounds, constructions',
+    levels: [
+      ...[
+        ['asymptotics', 'Asymptotics mastery'],
+        ['recurrences', 'Recurrences mastery'],
+        ['sorting', 'Sorting mastery'],
+        ['searching', 'Search / select mastery'],
+        ['structures', 'Data structures mastery'],
+        ['graphs', 'Graphs mastery'],
+        ['dp', 'DP mastery'],
+        ['greedy', 'Greedy mastery'],
+        ['dc', 'D&C / FFT mastery'],
+        ['strings', 'Strings mastery'],
+        ['np', 'NP mastery'],
+        ['randomized', 'Randomized mastery'],
+        ['proofs', 'Proof technique mastery'],
+      ].map(([unit, name]) => ({
+        id: `mastery-${unit}`,
+        name,
+        desc: `Hard problems · unit ${unit}`,
+        par: 4,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree',
+          mode: 'mastery',
+          algo: unit,
+          array: [],
+          meta: { unit, masteryIdx: 0, masteryScore: 0 },
+        },
+        intro:
+          `<p><code>set mastery ${unit}</code> · <code>run</code></p>` +
+          '<p>Answer with <code>answer &lt;value&gt;</code>. Tight bounds like <code>n log n</code>, <code>n^2</code>, numerics.</p>' +
+          '<p>Wrong answer keeps you on the item. Need a perfect score to clear.</p>',
+        goal: `Perfect score on mastery bank “${unit}”.`,
+        win: (ctx) => ctx.state.meta.masteryDone === true,
+      })),
+    ],
+  },
 };
 
 export const sequenceOrder = [
@@ -1319,6 +1360,7 @@ export const sequenceOrder = [
   'randomized',
   'proof',
   'peak',
+  'mastery',
 ];
 
 /**

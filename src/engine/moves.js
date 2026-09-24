@@ -14,6 +14,7 @@ import { SELECT_MOM } from '../algorithms/mom.js';
 import { PEAK } from '../algorithms/peak.js';
 import { GADGETS } from '../algorithms/gadgets.js';
 import { createProofSession, proofFrames, proofBanks } from '../algorithms/proofEngine.js';
+import { masteryBanks, gradeMastery } from '../curriculum/mastery.js';
 
 /**
  * Auto runners keyed by mode:algo
@@ -162,12 +163,62 @@ export function buildAutoFrames(state) {
     state.meta._proofSession = { bankName: state.meta.bank || state.algo, idx: 0, log: [] };
     return proofFrames(session, state.meta.bank || state.algo);
   }
+  if (mode === 'mastery') {
+    const unit = state.meta.unit || state.algo || 'asymptotics';
+    const bank = masteryBanks[unit] || masteryBanks.asymptotics;
+    state.meta.masteryUnit = unit;
+    state.meta.masteryIdx = 0;
+    state.meta.masteryScore = 0;
+    state.meta.masteryDone = false;
+    return masteryFrames(state, 0, null);
+  }
 
   return [
     {
       type: 'info',
       array: state.array.slice(),
       message: 'nothing to run — try `set sort bubble` then `run`',
+    },
+  ];
+}
+
+function masteryFrames(state, idx, feedback) {
+  const unit = state.meta.masteryUnit || 'asymptotics';
+  const bank = masteryBanks[unit] || [];
+  if (idx >= bank.length) {
+    const score = state.meta.masteryScore || 0;
+    const total = bank.length;
+    state.meta.masteryDone = score === total;
+    return [
+      {
+        type: 'done',
+        message: `mastery ${unit}: ${score}/${total}${score === total ? ' ✓' : ''}`,
+        extra: {
+          kind: 'proof',
+          bank: `mastery:${unit}`,
+          done: true,
+          allCorrect: score === total,
+          score,
+          total,
+        },
+      },
+    ];
+  }
+  const item = bank[idx];
+  return [
+    {
+      type: 'info',
+      message: `${feedback ? feedback + ' · ' : ''}Q${idx + 1}/${bank.length}: ${item.prompt}`,
+      extra: {
+        kind: 'proof',
+        bank: `mastery:${unit}`,
+        step: idx + 1,
+        total: bank.length,
+        prompt: `${idx + 1}. ${item.prompt}`,
+        choices: item.choices || null,
+        kindHint: item.kind,
+        score: state.meta.masteryScore || 0,
+      },
     },
   ];
 }
@@ -296,6 +347,9 @@ export function playerMove(name, args, state) {
       const q = String(args[0]);
       const rest = args.slice(1).join(' ');
       const choice = String(rest).toLowerCase();
+      if (state.mode === 'mastery') {
+        return masterySubmit(state, rest || q);
+      }
       // proof session path
       if (state.meta._proofSession || state.mode === 'proof') {
         return proofSubmit(state, choice || q);
@@ -324,6 +378,34 @@ export function playerMove(name, args, state) {
 
 function valid(i, n) {
   return Number.isInteger(i) && i >= 0 && i < n;
+}
+
+function masterySubmit(state, input) {
+  const unit = state.meta.masteryUnit || 'asymptotics';
+  const bank = masteryBanks[unit] || [];
+  const idx = state.meta.masteryIdx || 0;
+  if (idx >= bank.length) {
+    return {
+      type: 'info',
+      message: 'mastery unit complete — `run` to retry',
+      extra: { kind: 'proof', bank: `mastery:${unit}`, done: true },
+    };
+  }
+  const item = bank[idx];
+  const res = gradeMastery(item, input);
+  if (res.ok) {
+    state.meta.masteryScore = (state.meta.masteryScore || 0) + 1;
+    state.meta.masteryIdx = idx + 1;
+  }
+  const frame = masteryFrames(
+    state,
+    state.meta.masteryIdx || 0,
+    res.ok ? `✓` : `✗`,
+  )[0];
+  frame.message = res.ok
+    ? `✓ Q${idx + 1} ok — ${res.why}`
+    : `✗ expected “${item.answer}” — ${res.why}`;
+  return frame;
 }
 
 function proofSubmit(state, input) {

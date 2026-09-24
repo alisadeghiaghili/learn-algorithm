@@ -274,6 +274,7 @@ function handleSet(ctx, args) {
     theory: ['master', 'asymptotics', 'recurrences'],
     random: ['freivalds', 'mc'],
     proof: ['insertion-invariant', 'binary-invariant', 'dijkstra-invariant', 'greedy-exchange', 'np-reduction', 'master-thm', 'amortized-potential', 'lower-bound'],
+    mastery: ['asymptotics', 'recurrences', 'sorting', 'searching', 'structures', 'graphs', 'dp', 'greedy', 'dc', 'strings', 'np', 'randomized', 'proofs'],
   };
   if (!map[domain] || !map[domain].includes(name)) {
     ctx.log(`usage: set ${domain} ${map[domain] ? map[domain].join('|') : '…'}`, 'err');
@@ -291,7 +292,7 @@ function handleSet(ctx, args) {
     else if (!ctx.state.graph?.nodes?.length) ctx.state.graph = graphPresets().star;
   }
   if (domain === 'dp') ctx.state.kind = 'matrix';
-  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory' || domain === 'random' || domain === 'proof') {
+  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory' || domain === 'random' || domain === 'proof' || domain === 'mastery') {
     ctx.state.kind = 'tree';
   }
   if (domain === 'flow') {

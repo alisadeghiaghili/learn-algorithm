@@ -896,30 +896,31 @@ export class ExtraViz {
     const rows = [
       `A = [${(extra.a || []).join(', ')}]`,
       `B = [${(extra.b || []).join(', ')}]`,
-      `C = [${(extra.naive || []).join(', ')}]`,
-      `stage: ${extra.stage || ''}`,
+      `naive = [${(extra.naive || []).join(', ')}]`,
+      extra.prod ? `FFT  = [${extra.prod.join(', ')}]` : `stage: ${extra.stage || ''}`,
     ];
     rows.forEach((line, i) => {
       const t = el('text', {
         x: 50, y: 80 + i * 36,
-        fill: i === 2 ? C.sorted : C.text,
+        fill: i === 2 || i === 3 ? C.sorted : C.text,
         'font-family': 'IBM Plex Mono, monospace', 'font-size': 15,
       });
       t.textContent = line;
       svg.appendChild(t);
     });
-    // butterfly sketch
-    for (let layer = 0; layer < 2; layer += 1) {
-      for (let i = 0; i < 4; i += 1) {
-        const x = 80 + i * 80;
-        const y = 240 + layer * 50;
-        svg.appendChild(el('circle', { cx: x, cy: y, r: 10, fill: C.cell, stroke: C.edge }));
+    const n = extra.n || 8;
+    const layers = Math.log2(n);
+    for (let layer = 0; layer < layers; layer += 1) {
+      for (let i = 0; i < n; i += 1) {
+        const x = 60 + i * 40;
+        const y = 240 + layer * 40;
+        const active = extra.layer === 2 ** (layer + 1) || extra.stage === 'fft';
+        svg.appendChild(el('circle', {
+          cx: x, cy: y, r: 8,
+          fill: active ? C.compare : C.cell,
+          stroke: C.edge,
+        }));
       }
-      const lab = el('text', {
-        x: 400, y: 245 + layer * 50, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
-      });
-      lab.textContent = `layer ${layer + 1}`;
-      svg.appendChild(lab);
     }
     this.msg(svg, frame);
     this.mount(svg);
@@ -1025,7 +1026,7 @@ export class ExtraViz {
     const head = el('text', {
       x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
     });
-    head.textContent = `red-black · ${extra.rotate ? extra.rotate : 'insert'} · red nodes outlined`;
+    head.textContent = `red-black CLRS insert-fixup · ${extra.case != null ? 'case ' + extra.case : 'insert'}`;
     svg.appendChild(head);
     this.msg(svg, frame);
     this.mount(svg);
@@ -1035,14 +1036,13 @@ export class ExtraViz {
     const svg = this.baseSvg();
     const tree = extra.tree;
     const pos = new Map();
-    let nextY = 50;
     function place(node, x, depth) {
       if (!node) return;
-      const y = 40 + depth * 48;
+      const y = 50 + depth * 56;
       pos.set(node.id, { x, y, node });
       const kids = node.children || [];
       kids.forEach((c, i) => {
-        place(c, x + (i - (kids.length - 1) / 2) * Math.max(40, 80 / (depth + 1)), depth + 1);
+        place(c, x + (i - (kids.length - 1) / 2) * Math.max(48, 100 / (depth + 1)), depth + 1);
       });
     }
     place(tree, 400, 0);
@@ -1050,7 +1050,7 @@ export class ExtraViz {
       for (const c of node.children || []) {
         const p = pos.get(c.id);
         if (!p) continue;
-        svg.appendChild(el('line', { x1: x, y1: y + 14, x2: p.x, y2: p.y - 14, stroke: C.edge }));
+        svg.appendChild(el('line', { x1: x, y1: y + 10, x2: p.x, y2: p.y - 10, stroke: C.edge }));
         const lab = el('text', {
           x: (x + p.x) / 2, y: (y + p.y) / 2,
           'text-anchor': 'middle', fill: C.link, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
@@ -1065,7 +1065,7 @@ export class ExtraViz {
     const head = el('text', {
       x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
     });
-    head.textContent = `suffix tree · pattern "${extra.pat || ''}"`;
+    head.textContent = `compacted suffix tree · pattern "${extra.pat || ''}" · edges = substrings`;
     svg.appendChild(head);
     this.msg(svg, frame);
     this.mount(svg);
