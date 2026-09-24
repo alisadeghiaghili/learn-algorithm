@@ -43,18 +43,19 @@ npm run build
 ## Course map
 
 1. intro — step model, golf, asymptotics quiz
-2. asymptotics & recurrences — Master Theorem drills
-3. sorting — comparison sorts + counting/radix/bucket + theory exam
+2. asymptotics & recurrences — Master Theorem + substitution drills
+3. sorting — comparison + counting/radix/bucket + lower-bound exam
 4. searching & selection — binary search golf, quickselect
-5. data structures — BST, heap, union-find, hash
-6. graphs — BFS/DFS golf, MST, Dijkstra, Edmonds–Karp max-flow
-7. dynamic programming — fib, coins, LCS, knapsack + exam
-8. greedy & strings — activity selection, Huffman, KMP, Rabin–Karp
-9. divide & conquer — closest pair, Karatsuba via Master Theorem
-10. NP-completeness — SAT≤3-SAT≤CLIQUE≤VERTEX-COVER walkthroughs
-11. randomized / flow theory — Las Vegas vs Monte Carlo, max-flow exam
+5. data structures — BST, AVL, heap, union-find, hash
+6. graphs — BFS/DFS/MST golf, Dijkstra, Bellman-Ford, Floyd-Warshall, topo, SCC, Edmonds–Karp
+7. dynamic programming — fib, coins, LCS, knapsack, rod cutting, matrix chain
+8. greedy & strings — activity, Huffman, KMP, Rabin-Karp, Z, suffix array
+9. divide & conquer — closest pair, Karatsuba, recursion-tree drills
+10. NP-completeness — SAT≤3-SAT≤CLIQUE≤VC + gadget builder
+11. randomized — Freivalds (Monte Carlo), Las Vegas vs MC
+12. proof drills — invariants, lower bounds, amortized, reduction direction
 
-Theory packs: `lesson asymptotics|recurrences|sorting|linearSorts|…`  
+Theory packs: `lesson asymptotics|recurrences|substitution|avl|npGadget|decisionTree|amortized|…`  
 Analysis quizzes: `quiz asymptotics|recurrences|sorting|ds|graphs|dp|greedy|np|flow`
 
 ## Architecture

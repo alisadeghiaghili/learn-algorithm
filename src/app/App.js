@@ -325,8 +325,14 @@ export class App {
     if (setup.sorted) s.sorted = setup.sorted.slice();
     if (setup.target !== undefined) s.target = setup.target;
     if (setup.graph === null && s.kind === 'graph') {
-      s.graph = s.mode === 'flow' ? graphPresets().diamond : graphPresets().star;
-      if (s.mode === 'flow') s.graph.directed = true;
+      if (s.mode === 'flow') {
+        s.graph = graphPresets().diamond;
+        s.graph.directed = true;
+      } else if (s.algo === 'topo' || s.algo === 'scc') {
+        s.graph = graphPresets().dag;
+      } else {
+        s.graph = graphPresets().star;
+      }
     } else if (setup.graph) {
       s.graph = setup.graph;
     }
@@ -334,7 +340,7 @@ export class App {
     if (!setup.array && s.kind === 'array') {
       // keep existing
     }
-    if (s.kind === 'graph' && !s.graph.nodes.length) {
+    if (s.kind === 'graph' && (!s.graph || !s.graph.nodes?.length)) {
       s.graph = s.mode === 'flow' ? graphPresets().diamond : graphPresets().star;
     }
   }

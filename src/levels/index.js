@@ -394,6 +394,20 @@ export const sequences = {
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
       },
       {
+        id: 'ds-avl',
+        name: 'AVL rotations',
+        desc: 'LL/RR/LR/RL rebalance',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'ds', algo: 'avl', array: [],
+          meta: { keys: [10, 20, 30, 25, 28, 5, 40] },
+        },
+        intro: '<p><code>lesson avl</code></p><p>Balance factor in {−1,0,1}. Rotations are O(1).</p>',
+        goal: 'Run AVL inserts and observe rotations.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.rotate),
+      },
+      {
         id: 'ds-theory',
         name: 'Structures exam',
         desc: 'Costs and invariants',
@@ -504,6 +518,60 @@ export const sequences = {
         win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.value != null),
       },
       {
+        id: 'graph-bf',
+        name: 'Bellman-Ford',
+        desc: 'V−1 rounds · neg-cycle detect',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'graph', algo: 'bellman', graph: null, meta: {},
+        },
+        intro:
+          '<p>Allows negative weights. O(VE). Extra pass detects negative cycles.</p>' +
+          '<p><code>set graph bellman</code> · <code>run</code></p><p><code>lesson shortestPaths</code></p>',
+        goal: 'Run Bellman-Ford to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'graph-fw',
+        name: 'Floyd-Warshall',
+        desc: 'All-pairs O(V³)',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'graph', algo: 'floyd', graph: null, meta: {},
+        },
+        intro: '<p>dp[k][i][j] = best path with intermediates ≤ k. Watch the table fill.</p>',
+        goal: 'Run Floyd-Warshall to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'graph-topo',
+        name: 'Topological sort',
+        desc: 'Kahn · indegrees to zero',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'graph', algo: 'topo', graph: null, meta: {},
+        },
+        intro: '<p>DAG ⇔ topo order exists. Kahn emits indegree-0 nodes.</p><p><code>lesson graphsTheory</code></p>',
+        goal: 'Run topological sort to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.order?.length),
+      },
+      {
+        id: 'graph-scc',
+        name: 'Strong components',
+        desc: 'Kosaraju · G then Gᵀ',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'graph', algo: 'scc', graph: null, meta: {},
+        },
+        intro: '<p>Condensation of SCCs is a DAG. O(V+E).</p>',
+        goal: 'Run Kosaraju to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.comps?.length),
+      },
+      {
         id: 'graph-theory',
         name: 'Graphs exam',
         desc: 'Complexity + algorithm choice',
@@ -571,6 +639,28 @@ export const sequences = {
         intro: '<p>Guess: take item i or skip. Pseudo-polynomial in W.</p>',
         goal: 'Run knapsack to completion.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+      },
+      {
+        id: 'dp-rod',
+        name: 'Rod cutting',
+        desc: 'Interval-free 1D · O(n²)',
+        par: 1,
+        kind: 'tutorial',
+        setup: { kind: 'matrix', mode: 'dp', algo: 'rod', array: [], meta: {} },
+        intro: '<p>dp[i] = max_{j≤i} (p[j] + dp[i−j]). Classic 1D DP.</p>',
+        goal: 'Run rod cutting to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 4,
+      },
+      {
+        id: 'dp-chain',
+        name: 'Matrix chain',
+        desc: 'Interval DP · O(n³)',
+        par: 1,
+        kind: 'tutorial',
+        setup: { kind: 'matrix', mode: 'dp', algo: 'chain', array: [], meta: {} },
+        intro: '<p>cost[i][j] = min_k cost[i][k]+cost[k+1][j]+p_{i-1}p_k p_j.</p>',
+        goal: 'Run matrix-chain to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
       },
       {
         id: 'dp-theory',
@@ -654,6 +744,34 @@ export const sequences = {
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 2,
       },
       {
+        id: 'string-z',
+        name: 'Z-algorithm',
+        desc: 'Z-box linear scan',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'string', algo: 'z', array: [],
+          meta: { text: 'aabxaab' },
+        },
+        intro: '<p>Z[i] = lcp(S, S[i..]). Box [l,r) trick → O(n).</p>',
+        goal: 'Run Z-algorithm to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.length > 3,
+      },
+      {
+        id: 'string-sa',
+        name: 'Suffix array',
+        desc: 'Prefix doubling',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'string', algo: 'sa', array: [],
+          meta: { text: 'banana' },
+        },
+        intro: '<p>Sort suffixes by 2^k-length prefixes. O(n log² n) narrative version.</p>',
+        goal: 'Run suffix array build to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.done),
+      },
+      {
         id: 'greedy-theory',
         name: 'Greedy exam',
         desc: 'Rules and counterexamples',
@@ -709,6 +827,24 @@ export const sequences = {
         intro: '<p>Case 1 → Θ(n^{log₂3}) ≈ n^{1.585}.</p>',
         goal: 'Run MT and confirm Karatsuba bound.',
         win: (ctx) => ctx.engine.done && ctx.engine.frames.length >= 2,
+      },
+      {
+        id: 'dc-tree',
+        name: 'Recursion tree reading',
+        desc: 'Where does the work go?',
+        par: 2,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'rt', array: [0], meta: { answers: {} } },
+        intro:
+          '<p><code>lesson recurrences</code> · <code>lesson substitution</code></p>' +
+          '<ol><li>2T(n/2)+n: work per level is? a) n b) n² c) log n d) 1</li>' +
+          '<li>Number of levels is? a) n b) log n c) n² d) 1</li></ol>' +
+          '<p>Answers: a, b → Θ(n log n)</p>',
+        goal: 'Both correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'a' && a['2'] === 'b';
+        },
       },
     ],
   },
@@ -807,12 +943,158 @@ export const sequences = {
         intro:
           '<p><code>lesson randomized</code></p>' +
           '<ol><li>Randomized quicksort is? a) Las Vegas b) Monte Carlo</li>' +
-          '<li>Freivalds matrix check is? a) Las Vegas b) Monte Carlo</li></ol>' +
-          '<p>Answers: a, b</p>',
-        goal: 'Both correct.',
+          '<li>Freivalds matrix check is? a) Las Vegas b) Monte Carlo</li></ol>',
+        goal: 'Both correct (a, b).',
         win: (ctx) => {
           const a = ctx.state.meta.answers || {};
           return a['1'] === 'a' && a['2'] === 'b';
+        },
+      },
+      {
+        id: 'rand-2',
+        name: 'Freivalds demo',
+        desc: 'Monte Carlo product check',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'random', algo: 'freivalds', array: [], meta: {},
+        },
+        intro:
+          '<p>Verify C=AB in O(n²) with a random vector. Error ≤ 1/2 per trial.</p>' +
+          '<p><code>set random freivalds</code> · <code>run</code></p>',
+        goal: 'Run Freivalds and read accept/reject.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.phase === 'done'),
+      },
+      {
+        id: 'rand-3',
+        name: 'Substitution drill',
+        desc: 'Prove T(n)=2T(n/2)+n is Θ(n log n)',
+        par: 1,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'sub', array: [0], meta: { answers: {} } },
+        intro:
+          '<p><code>lesson substitution</code></p>' +
+          '<ol><li>Upper bound guess? a) cn b) cn log n c) cn² d) c n log² n</li>' +
+          '<li>To claim Θ you must prove? a) O only b) Ω only c) both d) neither</li></ol>' +
+          '<p>Answers: b, c</p>',
+        goal: 'Both correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'c';
+        },
+      },
+      {
+        id: 'rand-4',
+        name: 'Amortized + decision tree',
+        desc: 'Two proof-sketch questions',
+        par: 2,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'amort', array: [0], meta: { answers: {} } },
+        intro:
+          '<p><code>lesson amortized</code> · <code>lesson decisionTree</code></p>' +
+          '<ol><li>Dynamic array push amortized? a) O(n) b) O(1) c) O(log n) d) O(n²)</li>' +
+          '<li>Comparison sort lower bound proof uses? a) code count b) decision tree leaves n! c) wall clock d) hash</li></ol>' +
+          '<p>Answers: b, b</p>',
+        goal: 'Both correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'b';
+        },
+      },
+    ],
+  },
+
+  proof: {
+    name: 'proof drills',
+    blurb: 'Invariants, lower bounds, reductions',
+    levels: [
+      {
+        id: 'proof-1',
+        name: 'Invariant recognition',
+        desc: 'Pick the true loop invariant',
+        par: 3,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'inv', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol>' +
+          '<li>Insertion sort after i steps: a) unsorted rest sorted b) a[0..i] sorted perm of orig c) a[i] is max d) reversed</li>' +
+          '<li>Binary search invariant: a) mid is answer b) target in a[lo..hi] if present c) lo&gt;hi d) array unsorted</li>' +
+          '<li>Dijkstra settle step proves: a) dist[u] final b) graph DAG c) no cycles d) MST edge</li>' +
+          '</ol><p>Answers: b, b, a</p>',
+        goal: 'All 3 correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'b' && a['3'] === 'a';
+        },
+      },
+      {
+        id: 'proof-2',
+        name: 'Reduction direction',
+        desc: 'Hardness transfer',
+        par: 2,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'red', array: [0], meta: { answers: {} } },
+        intro:
+          '<p><code>lesson npGadget</code></p>' +
+          '<ol><li>A ≤_p B means? a) B solves A b) A at least as hard as B c) hardness flows to B d) A in P</li>' +
+          '<li>3-SAT→CLIQUE sets k =? a) |V| b) #clauses c) 2 d) n log n</li></ol>',
+        goal: 'Both correct (c, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'c' && a['2'] === 'b';
+        },
+      },
+      {
+        id: 'proof-3',
+        name: 'Gadget builder',
+        desc: 'Build CLIQUE instance from 3-SAT',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'np', algo: 'build', array: [],
+          meta: {
+            clauses: [
+              ['x', 'y', 'z'],
+              ['!x', 'y', 'w'],
+              ['!y', '!z', 'w'],
+            ],
+          },
+        },
+        intro:
+          '<p>Run the builder and confirm: groups=3, k=3, no edges inside a group, no x–!x edges.</p>',
+        goal: 'Run NP gadget builder to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.phase === 'ready'),
+      },
+      {
+        id: 'proof-4',
+        name: 'AVL rebalance',
+        desc: 'Watch LL/RR/LR/RL rotations',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'ds', algo: 'avl', array: [],
+          meta: { keys: [30, 20, 10, 25, 28, 5, 40] },
+        },
+        intro:
+          '<p><code>lesson avl</code></p><p>Keys force LR/RL cases. Height stays Θ(log n).</p>',
+        goal: 'Run AVL inserts and see rotations fire.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.rotate),
+      },
+      {
+        id: 'proof-5',
+        name: 'Lower bound & amortized exam',
+        desc: 'Decision tree + potential method',
+        par: 2,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'lb', array: [0], meta: { answers: {} } },
+        intro:
+          '<p><code>lesson decisionTree</code> · <code>lesson amortized</code></p>' +
+          '<ol><li>n! leaves ⇒ height? a) Ω(n) b) Ω(n log n) c) Ω(n²) d) Ω(log n)</li>' +
+          '<li>UF α(n) means? a) constant proven b) inverse Ackermann c) log n d) n</li></ol>',
+        goal: 'Both correct (b, b).',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return a['1'] === 'b' && a['2'] === 'b';
         },
       },
     ],
@@ -831,6 +1113,7 @@ export const sequenceOrder = [
   'dc',
   'np',
   'randomized',
+  'proof',
 ];
 
 /**

@@ -261,26 +261,31 @@ function handleSet(ctx, args) {
   const map = {
     sort: ['bubble', 'selection', 'insertion', 'merge', 'quick', 'heap', 'counting', 'radix', 'bucket'],
     search: ['linear', 'binary', 'select'],
-    graph: ['bfs', 'dfs', 'dijkstra', 'prim', 'kruskal', 'bellman', 'floyd', 'topo'],
+    graph: ['bfs', 'dfs', 'dijkstra', 'prim', 'kruskal', 'bellman', 'floyd', 'topo', 'scc'],
     dp: ['fib', 'coin', 'lcs', 'knapsack', 'rod', 'chain'],
-    ds: ['bst', 'bst-insert', 'bst-search', 'heap', 'uf', 'hash'],
+    ds: ['bst', 'bst-insert', 'bst-search', 'heap', 'uf', 'hash', 'avl'],
     greedy: ['activity', 'huffman'],
-    string: ['kmp', 'rk'],
+    string: ['kmp', 'rk', 'z', 'sa'],
     flow: ['flow', 'ek'],
-    np: ['sat-3sat', '3sat-clique', 'clique-vc'],
+    np: ['sat-3sat', '3sat-clique', 'clique-vc', 'build', 'clique-build'],
     dc: ['closest', 'master', 'karatsuba'],
     theory: ['master', 'asymptotics', 'recurrences'],
+    random: ['freivalds', 'mc'],
   };
   if (!map[domain] || !map[domain].includes(name)) {
     ctx.log(`usage: set ${domain} ${map[domain] ? map[domain].join('|') : '…'}`, 'err');
     return;
   }
-  ctx.state.algo = name === 'flow' || name === 'ek' ? 'ek' : name;
+  ctx.state.algo = name === 'flow' || name === 'ek' ? 'ek' : name === 'freivalds' || name === 'mc' ? 'freivalds' : name;
   ctx.state.mode = domain;
   if (domain === 'sort' || domain === 'search') ctx.state.kind = 'array';
-  if (domain === 'graph') ctx.state.kind = 'graph';
+  if (domain === 'graph') {
+    ctx.state.kind = 'graph';
+    if (name === 'topo' || name === 'scc') ctx.state.graph = graphPresets().dag;
+    else if (!ctx.state.graph?.nodes?.length) ctx.state.graph = graphPresets().star;
+  }
   if (domain === 'dp') ctx.state.kind = 'matrix';
-  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory') {
+  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory' || domain === 'random') {
     ctx.state.kind = 'tree';
   }
   if (domain === 'flow') {
@@ -379,6 +384,27 @@ export function graphPresets() {
         { u: 1, v: 3, w: 3 },
         { u: 2, v: 3, w: 1 },
         { u: 1, v: 2, w: 1 },
+      ],
+    },
+    dag: {
+      directed: true,
+      nodes: mkNodes([
+        [100, 200, 'A'],
+        [220, 100, 'B'],
+        [220, 280, 'C'],
+        [360, 100, 'D'],
+        [360, 280, 'E'],
+        [500, 180, 'F'],
+      ]),
+      edges: [
+        { u: 0, v: 1, w: 1 },
+        { u: 0, v: 2, w: 1 },
+        { u: 1, v: 3, w: 1 },
+        { u: 2, v: 3, w: 1 },
+        { u: 2, v: 4, w: 1 },
+        { u: 3, v: 5, w: 1 },
+        { u: 4, v: 5, w: 1 },
+        { u: 1, v: 4, w: 1 },
       ],
     },
   };

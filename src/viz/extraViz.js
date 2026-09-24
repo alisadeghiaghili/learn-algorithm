@@ -77,6 +77,30 @@ export class ExtraViz {
       case 'buckets':
         this.buckets(extra, frame);
         return true;
+      case 'bf':
+        this.bf(extra, frame);
+        return true;
+      case 'fw':
+        this.fw(extra, frame);
+        return true;
+      case 'topo':
+        this.topo(extra, frame);
+        return true;
+      case 'scc':
+        this.scc(extra, frame);
+        return true;
+      case 'sarray':
+        this.sarray(extra, frame);
+        return true;
+      case 'freivalds':
+        this.freivalds(extra, frame);
+        return true;
+      case 'npbuild':
+        this.npbuild(extra, frame);
+        return true;
+      case 'proof':
+        this.proof(extra, frame);
+        return true;
       default:
         return false;
     }
@@ -563,6 +587,249 @@ export class ExtraViz {
       });
     });
     this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  bf(extra, frame) {
+    const svg = this.baseSvg();
+    const dist = extra.dist || [];
+    const round = extra.round ?? 0;
+    const t0 = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    t0.textContent = `Bellman-Ford · round ${round} · dist[]`;
+    svg.appendChild(t0);
+    dist.forEach((d, i) => {
+      const x = 40 + i * 70;
+      svg.appendChild(el('rect', {
+        x, y: 100, width: 60, height: 48, rx: 6,
+        fill: extra.active?.includes(i) ? C.compare : C.cell,
+        stroke: C.edge,
+      }));
+      const t = el('text', {
+        x: x + 30, y: 124, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: extra.active?.includes(i) ? '#0b1220' : C.text,
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 14,
+      });
+      t.textContent = String(d);
+      svg.appendChild(t);
+      const lab = el('text', {
+        x: x + 30, y: 168, 'text-anchor': 'middle', fill: C.muted,
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
+      });
+      lab.textContent = `v${i}`;
+      svg.appendChild(lab);
+    });
+    if (extra.neg) {
+      const w = el('text', { x: 28, y: 240, fill: C.alert, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 14 });
+      w.textContent = 'negative-weight cycle';
+      svg.appendChild(w);
+    }
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  fw(extra, frame) {
+    const svg = this.baseSvg();
+    const dist = extra.dist || [];
+    const n = extra.n || dist.length;
+    const cell = Math.min(48, 700 / n);
+    dist.forEach((row, i) => {
+      row.forEach((v, j) => {
+        const active = (extra.active || []).includes(i) || (extra.active || []).includes(j) || (extra.active || []).includes(extra.k);
+        const x = 80 + j * cell;
+        const y = 70 + i * cell;
+        svg.appendChild(el('rect', {
+          x, y, width: cell - 2, height: cell - 2,
+          fill: active ? C.compare : C.cell, stroke: C.edge,
+        }));
+        const t = el('text', {
+          x: x + cell / 2 - 1, y: y + cell / 2 - 1,
+          'text-anchor': 'middle', 'dominant-baseline': 'central',
+          fill: active ? '#0b1220' : C.text,
+          'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
+        });
+        t.textContent = String(v);
+        svg.appendChild(t);
+      });
+    });
+    const k = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    k.textContent = `Floyd-Warshall · intermediate k=${extra.k ?? '-'}`;
+    svg.appendChild(k);
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  topo(extra, frame) {
+    const svg = this.baseSvg();
+    const order = extra.order || [];
+    const queue = extra.queue || [];
+    const indeg = extra.indeg || [];
+    indeg.forEach((d, i) => {
+      const x = 40 + i * 90;
+      svg.appendChild(el('circle', {
+        cx: x + 30, cy: 120, r: 24,
+        fill: (extra.done || []).includes(i) ? C.sorted : queue.includes(i) ? C.compare : C.cell,
+        stroke: C.edge, 'stroke-width': 2,
+      }));
+      const t = el('text', {
+        x: x + 30, y: 120, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: (extra.done || []).includes(i) || queue.includes(i) ? '#0b1220' : C.text,
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+      });
+      t.textContent = String(i);
+      svg.appendChild(t);
+      const lab = el('text', {
+        x: x + 30, y: 165, 'text-anchor': 'middle', fill: C.muted,
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
+      });
+      lab.textContent = `deg=${d}`;
+      svg.appendChild(lab);
+    });
+    const o = el('text', {
+      x: 28, y: 240, fill: C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    o.textContent = `order: ${order.join(' → ') || '—'}`;
+    svg.appendChild(o);
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  scc(extra, frame) {
+    const svg = this.baseSvg();
+    const comps = extra.comps || [];
+    const t = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    t.textContent = `Kosaraju · phase ${extra.phase ?? 1} · SCCs so far: ${comps.length}`;
+    svg.appendChild(t);
+    comps.forEach((comp, i) => {
+      const y = 80 + i * 50;
+      svg.appendChild(el('rect', {
+        x: 40, y, width: 360, height: 40, rx: 8, fill: C.cell, stroke: C.link,
+      }));
+      const lab = el('text', {
+        x: 56, y: y + 22, fill: C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+      });
+      lab.textContent = `SCC ${i + 1}: {${comp.join(', ')}}`;
+      svg.appendChild(lab);
+    });
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  sarray(extra, frame) {
+    const svg = this.baseSvg();
+    const text = extra.text || '';
+    const sa = extra.sa || [];
+    const rank = extra.rank || [];
+    const t0 = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    t0.textContent = `suffix array · width ${extra.k ?? 1}`;
+    svg.appendChild(t0);
+    text.split('').forEach((ch, i) => {
+      svg.appendChild(el('rect', { x: 40 + i * 28, y: 70, width: 26, height: 32, rx: 3, fill: C.cell, stroke: C.edge }));
+      const t = el('text', {
+        x: 40 + i * 28 + 13, y: 86, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: C.text, 'font-family': 'IBM Plex Mono, monospace',
+      });
+      t.textContent = ch;
+      svg.appendChild(t);
+    });
+    sa.forEach((idx, i) => {
+      const y = 130 + i * 28;
+      const t = el('text', {
+        x: 40, y, fill: C.link, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+      });
+      t.textContent = `[${idx}] rank=${rank[idx]}  ${text.slice(idx)}`;
+      svg.appendChild(t);
+    });
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  freivalds(extra, frame) {
+    const svg = this.baseSvg();
+    const rows = [
+      `r   = [${(extra.r || []).join(', ')}]`,
+      `Br  = [${(extra.Br || []).join(', ')}]`,
+      `A(Br)=[${(extra.ABr || []).join(', ')}]`,
+      `Cr  = [${(extra.Cr || []).join(', ')}]`,
+      extra.ok ? 'accept' : extra.phase === 'done' ? 'reject' : '…',
+    ];
+    rows.forEach((line, i) => {
+      const t = el('text', {
+        x: 60, y: 80 + i * 40,
+        fill: i === 4 ? (extra.ok ? C.sorted : C.alert) : C.text,
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 16,
+      });
+      t.textContent = line;
+      svg.appendChild(t);
+    });
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  npbuild(extra, frame) {
+    const svg = this.baseSvg();
+    const nodes = extra.nodes || [];
+    const edges = extra.edges || [];
+    const groups = extra.clauses?.length || 1;
+    nodes.forEach((n) => {
+      const gi = n.group;
+      const inside = nodes.filter((x) => x.group === gi);
+      const idx = inside.indexOf(n);
+      const x = 80 + gi * 120;
+      const y = 80 + idx * 70;
+      n._x = x;
+      n._y = y;
+    });
+    for (const [i, j] of edges) {
+      const a = nodes[i];
+      const b = nodes[j];
+      if (!a || !b) continue;
+      svg.appendChild(el('line', {
+        x1: a._x, y1: a._y, x2: b._x, y2: b._y, stroke: C.edge, 'stroke-width': 1.5,
+      }));
+    }
+    nodes.forEach((n) => {
+      svg.appendChild(el('circle', {
+        cx: n._x, cy: n._y, r: 18,
+        fill: n.lit.startsWith('!') ? '#3a2040' : C.cell,
+        stroke: C.link, 'stroke-width': 2,
+      }));
+      const t = el('text', {
+        x: n._x, y: n._y, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
+      });
+      t.textContent = n.label;
+      svg.appendChild(t);
+    });
+    const head = el('text', {
+      x: 28, y: 36, fill: C.compare, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    head.textContent = `3-SAT → CLIQUE · k=${extra.k} · groups = clauses`;
+    svg.appendChild(head);
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  proof(extra, frame) {
+    const svg = this.baseSvg();
+    const t0 = el('text', {
+      x: 40, y: 60, fill: C.compare, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 14,
+    });
+    t0.textContent = `proof drill ${extra.step}/${extra.total}`;
+    svg.appendChild(t0);
+    wrapText(svg, (frame?.message || '').replace(/^\d+\.\s*/, ''), 40, 110, 720, 24, C.text);
+    const hint = el('text', {
+      x: 40, y: 320, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
+    });
+    hint.textContent = 'answer with `answer N <choice>` or side-panel buttons';
+    svg.appendChild(hint);
     this.mount(svg);
   }
 }

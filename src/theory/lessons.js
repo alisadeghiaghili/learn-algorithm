@@ -171,6 +171,70 @@ export const lessons = {
     <p><strong>Expectation linearity.</strong> E[X+Y]=E[X]+E[Y] even when dependent — the workhorse of randomized analysis.</p>
     <p><strong>Concentration.</strong> Chernoff bounds for sums of independent 0/1 rvs.</p>
     <p><strong>Approximation.</strong> NP-hardness means drop exactness: e.g. greedy ½-approx for max vertex cover variants, PTAS for knapsack.</p>
+    <p><strong>Freivalds.</strong> To verify C=AB, pick random 0/1 vector r and check A(Br)=Cr. If C=AB always accept; else Pr[accept] ≤ 1/2. Repeat k times → error ≤ 2^{-k}.</p>
+    <p><strong>Randomized select.</strong> Random pivot → expected linear partitions. Las Vegas (always correct).</p>
+  `,
+
+  substitution: `
+    <p><strong>Substitution method.</strong></p>
+    <ol>
+      <li>Guess the form, e.g. T(n) ≤ cn log n.</li>
+      <li>Induction on n: assume true for all smaller m.</li>
+      <li>Plug into recurrence; find c, n₀ making the inequality close.</li>
+    </ol>
+    <p><strong>Worked.</strong> T(n)=2T(n/2)+n. Guess T(n) ≤ cn log n.</p>
+    <ul>
+      <li>T(n) ≤ 2·c(n/2) log(n/2) + n = cn log n − cn + n = cn log n − (c−1)n</li>
+      <li>Need −(c−1)n ≤ 0 ⇒ c ≥ 1. Base cases need a separate constant shift if T(1)&gt;0.</li>
+    </ul>
+    <p><strong>Common failure.</strong> Guessing O and only proving O — you must also prove Ω for Θ.</p>
+    <p><strong>Recursion tree.</strong> Charge f(n) to nodes level by level; sum geometric series. Identical answer to Master Theorem when it applies.</p>
+  `,
+
+  avl: `
+    <p><strong>AVL balance factor.</strong> bf = height(left) − height(right) ∈ {−1,0,1} at every node.</p>
+    <p><strong>Rotations.</strong> O(1) local rebalance.</p>
+    <ul>
+      <li>LL → right rotate</li>
+      <li>RR → left rotate</li>
+      <li>LR → left then right</li>
+      <li>RL → right then left</li>
+    </ul>
+    <p><strong>Height.</strong> n-node AVL has h = Θ(log n). Worst case ≈ 1.44 log₂ n.</p>
+    <p><strong>Invariant.</strong> BST order is preserved by rotations; only parent/child pointers change.</p>
+    <p><strong>vs Red-Black.</strong> AVL stricter → faster lookups. RB fewer rotations → faster inserts/deletes. Both Θ(log n).</p>
+  `,
+
+  npGadget: `
+    <p><strong>3-SAT → CLIQUE construction (do it yourself).</strong></p>
+    <ol>
+      <li>One group per clause. Node per literal.</li>
+      <li>Edge between literals of <em>different</em> groups iff they are not complements (x and ¬x).</li>
+      <li>k = number of clauses.</li>
+    </ol>
+    <p><strong>Why it works.</strong></p>
+    <ul>
+      <li>(⇒) Satisfying assignment: pick one true literal per clause. k-clique — consistent so edges exist.</li>
+      <li>(⇐) k-clique has ≤1 node per group (no intra-group edges) and ≥k nodes ⇒ exactly one per group. No complement edges ⇒ no contradictory pair set true.</li>
+    </ul>
+    <p><strong>Skill to drill.</strong> Given a new NPC problem X, reduce a known NPC → X. Always construct f, then prove x ∈ A ⇔ f(x) ∈ B.</p>
+    <p><strong>Try in sandbox:</strong> <code>set np build</code> · <code>run</code> with your clauses in meta.</p>
+  `,
+
+  decisionTree: `
+    <p><strong>Comparison-sort lower bound.</strong> A comparison sort = binary decision tree. Leaves = permutations ≥ n!. Height ≥ log₂(n!) = Ω(n log n) (Stirling).</p>
+    <p><strong>Corollary.</strong> Heapsort/mergesort are asymptotically optimal among comparison sorts.</p>
+    <p><strong>Escape hatches.</strong> Counting/radix/bucket inspect key structure — not comparisons — so they are not in this model.</p>
+    <p><strong>Drill.</strong> Any proof of "sorting needs n log n" must say <em>comparison</em> sort and argue about decision trees (or an adversary).</p>
+  `,
+
+  amortized: `
+    <p><strong>Aggregate.</strong> Total cost of n ops / n.</p>
+    <p><strong>Accounting.</strong> Charge some ops extra credit; spend it on expensive ops later.</p>
+    <p><strong>Potential.</strong> Φ(D) measures stored work. Amortized = actual + ΔΦ.</p>
+    <p><strong>Dynamic array.</strong> Doubling: push amortized O(1) because the geometric series of copies is O(n).</p>
+    <p><strong>UF.</strong> Inverse-Ackermann α(n) via path compression analysis (tarjan) — do not call it O(1) in an exam.</p>
+    <p><strong>Stack multipop.</strong> Multipop amortized O(1) with accounting (each element pushed once).</p>
   `,
 };
 

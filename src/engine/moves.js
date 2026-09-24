@@ -1,10 +1,15 @@
 import { SORTERS } from '../algorithms/sorting.js';
 import { SEARCHERS } from '../algorithms/searching.js';
 import { GRAPHERS } from '../algorithms/graphs.js';
+import { GRAPHERS_EXTRA } from '../algorithms/graphsExtra.js';
 import { DPS } from '../algorithms/dp.js';
+import { DPS_EXTRA } from '../algorithms/dpExtra.js';
 import { LINEAR_SORTERS, quickSelect } from '../algorithms/linearSorts.js';
 import { STRUCTURES } from '../algorithms/structures.js';
+import { AVL } from '../algorithms/avl.js';
 import { GREEDY, STRINGS, FLOW, NP, DC, THEORYRUN } from '../algorithms/extras.js';
+import { STRINGS_EXTRA, RANDOMIZED } from '../algorithms/stringsExtra.js';
+import { NP_BUILD } from '../algorithms/npBuild.js';
 
 /**
  * Auto runners keyed by mode:algo
@@ -28,9 +33,14 @@ export function buildAutoFrames(state) {
     return (SEARCHERS[algo] || SEARCHERS.linear)(arr, target);
   }
   if (mode === 'graph') {
+    if (GRAPHERS_EXTRA[algo]) return GRAPHERS_EXTRA[algo](state.graph, 0);
     return (GRAPHERS[algo] || GRAPHERS.bfs)(state.graph, 0);
   }
+  if (mode === 'flow') {
+    return FLOW.edmondsKarp(state.graph, 0, state.graph.nodes.length - 1);
+  }
   if (mode === 'dp') {
+    if (DPS_EXTRA[algo]) return DPS_EXTRA[algo]();
     return (DPS[algo] || DPS.fib)();
   }
   if (mode === 'greedy') {
@@ -51,14 +61,13 @@ export function buildAutoFrames(state) {
     );
   }
   if (mode === 'string') {
+    if (STRINGS_EXTRA[algo]) return STRINGS_EXTRA[algo](state.meta.text || 'AABAABAAB');
     const text = state.meta.text || 'AABAABAAB';
     const pat = state.meta.pat || 'AAB';
     return (STRINGS[algo] || STRINGS.kmp)(text, pat);
   }
-  if (mode === 'flow') {
-    return FLOW.edmondsKarp(state.graph, 0, state.graph.nodes.length - 1);
-  }
   if (mode === 'ds') {
+    if (algo === 'avl') return AVL.avlInserts(state.meta.keys || [30, 20, 10, 25, 28, 5, 40]);
     if (algo === 'bst' || algo === 'bst-insert') {
       return STRUCTURES.bstInserts(state.meta.keys || [8, 3, 10, 1, 6, 14, 4, 7, 13]);
     }
@@ -85,7 +94,24 @@ export function buildAutoFrames(state) {
     }
   }
   if (mode === 'np') {
-    return NP.npReduction(algo in { 'sat-3sat': 1, '3sat-clique': 1, 'clique-vc': 1 } ? algo : 'sat-3sat');
+    if (algo === 'build' || algo === 'clique-build') {
+      return NP_BUILD.cliquesFrom3sat({
+        clauses: state.meta.clauses || [
+          ['x', 'y', 'z'],
+          ['!x', 'y', 'w'],
+          ['!y', '!z', 'w'],
+        ],
+      });
+    }
+    const key = ['sat-3sat', '3sat-clique', 'clique-vc'].includes(algo) ? algo : 'sat-3sat';
+    return NP.npReduction(key);
+  }
+  if (mode === 'random') {
+    return RANDOMIZED.freivalds(
+      state.meta.A || [[1, 2], [3, 4]],
+      state.meta.B || [[5, 6], [7, 8]],
+      state.meta.C || [[19, 22], [43, 50]],
+    );
   }
   if (mode === 'dc') {
     if (algo === 'closest') {
