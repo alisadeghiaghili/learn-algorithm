@@ -101,6 +101,27 @@ export class ExtraViz {
       case 'proof':
         this.proof(extra, frame);
         return true;
+      case 'mom':
+        this.mom(extra, frame);
+        return true;
+      case 'poly':
+        this.poly(extra, frame);
+        return true;
+      case 'matroid':
+        this.matroid(extra, frame);
+        return true;
+      case 'vc':
+        this.vc(extra, frame);
+        return true;
+      case 'rb':
+        this.rb(extra, frame);
+        return true;
+      case 'stree':
+        this.stree(extra, frame);
+        return true;
+      case 'gadget':
+        this.gadget(extra, frame);
+        return true;
       default:
         return false;
     }
@@ -822,14 +843,251 @@ export class ExtraViz {
     const t0 = el('text', {
       x: 40, y: 60, fill: C.compare, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 14,
     });
-    t0.textContent = `proof drill ${extra.step}/${extra.total}`;
+    t0.textContent = `proof drill ${extra.step ?? '—'}/${extra.total ?? '—'}${extra.bank ? ' · ' + extra.bank : ''}`;
     svg.appendChild(t0);
-    wrapText(svg, (frame?.message || '').replace(/^\d+\.\s*/, ''), 40, 110, 720, 24, C.text);
+    wrapText(svg, (extra.prompt || frame?.message || '').replace(/^\d+\.\s*/, ''), 40, 110, 720, 24, C.text);
+    if (extra.choices) {
+      const keys = Object.keys(extra.choices);
+      keys.forEach((k, i) => {
+        const t = el('text', {
+          x: 40, y: 220 + i * 28, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+        });
+        t.textContent = `${k}) ${extra.choices[k]}`;
+        svg.appendChild(t);
+      });
+    }
     const hint = el('text', {
-      x: 40, y: 320, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
+      x: 40, y: 380, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
     });
-    hint.textContent = 'answer with `answer N <choice>` or side-panel buttons';
+    hint.textContent = 'submit with `answer N <choice|fill>` or side-panel buttons';
     svg.appendChild(hint);
+    this.mount(svg);
+  }
+
+  mom(extra, frame) {
+    const svg = this.baseSvg();
+    const groups = extra.groups || [];
+    groups.forEach((g, i) => {
+      const x = 40 + (i % 6) * 110;
+      const y = 80 + Math.floor(i / 6) * 80;
+      svg.appendChild(el('rect', {
+        x, y, width: 100, height: 50, rx: 6,
+        fill: extra.median != null ? C.cell : '#24324a',
+        stroke: C.link, 'stroke-width': 2,
+      }));
+      const t = el('text', {
+        x: x + 50, y: y + 25, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
+      });
+      t.textContent = `grp ${i + 1} [${g[0]}..${g[1]}]`;
+      svg.appendChild(t);
+    });
+    const head = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    head.textContent = `Median of Medians · pivot=${extra.median ?? '…'} · k=${extra.k ?? '-'}`;
+    svg.appendChild(head);
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  poly(extra, frame) {
+    const svg = this.baseSvg();
+    const rows = [
+      `A = [${(extra.a || []).join(', ')}]`,
+      `B = [${(extra.b || []).join(', ')}]`,
+      `C = [${(extra.naive || []).join(', ')}]`,
+      `stage: ${extra.stage || ''}`,
+    ];
+    rows.forEach((line, i) => {
+      const t = el('text', {
+        x: 50, y: 80 + i * 36,
+        fill: i === 2 ? C.sorted : C.text,
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 15,
+      });
+      t.textContent = line;
+      svg.appendChild(t);
+    });
+    // butterfly sketch
+    for (let layer = 0; layer < 2; layer += 1) {
+      for (let i = 0; i < 4; i += 1) {
+        const x = 80 + i * 80;
+        const y = 240 + layer * 50;
+        svg.appendChild(el('circle', { cx: x, cy: y, r: 10, fill: C.cell, stroke: C.edge }));
+      }
+      const lab = el('text', {
+        x: 400, y: 245 + layer * 50, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
+      });
+      lab.textContent = `layer ${layer + 1}`;
+      svg.appendChild(lab);
+    }
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  matroid(extra, frame) {
+    const svg = this.baseSvg();
+    const items = extra.items || [];
+    items.forEach((it, i) => {
+      const x = 40 + i * 80;
+      svg.appendChild(el('rect', {
+        x, y: 120, width: 60, height: 80, rx: 6,
+        fill: it.chosen ? C.sorted : C.cell,
+        stroke: it.chosen ? C.sorted : C.edge,
+      }));
+      const t = el('text', {
+        x: x + 30, y: 160, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: it.chosen ? '#0b1220' : C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 14,
+      });
+      t.textContent = String(it.w);
+      svg.appendChild(t);
+      const lab = el('text', {
+        x: x + 30, y: 220, 'text-anchor': 'middle', fill: C.muted,
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 10,
+      });
+      lab.textContent = `#${it.id}${it.chosen ? ' ✓' : ''}`;
+      svg.appendChild(lab);
+    });
+    const head = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+    });
+    head.textContent = `matroid greedy U_{${extra.k}} · chosen ${ (extra.chosen || []).length }`;
+    svg.appendChild(head);
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  vc(extra, frame) {
+    const svg = this.baseSvg();
+    const nodes = extra.nodes || [];
+    const covered = new Set(extra.covered || []);
+    const matching = extra.matching || [];
+    const mset = new Set(matching.map(([u, v]) => `${u}-${v}`));
+    for (const e of extra.edges || []) {
+      const a = nodes[e.u];
+      const b = nodes[e.v];
+      const on = mset.has(`${e.u}-${e.v}`) || mset.has(`${e.v}-${e.u}`);
+      svg.appendChild(el('line', {
+        x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+        stroke: on ? C.compare : C.edge, 'stroke-width': on ? 3 : 1.5,
+      }));
+    }
+    for (const n of nodes) {
+      svg.appendChild(el('circle', {
+        cx: n.x, cy: n.y, r: 22,
+        fill: covered.has(n.id) ? C.sorted : C.cell,
+        stroke: C.link, 'stroke-width': 2,
+      }));
+      const t = el('text', {
+        x: n.x, y: n.y, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: covered.has(n.id) ? '#0b1220' : C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
+      });
+      t.textContent = n.label;
+      svg.appendChild(t);
+    }
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  rb(extra, frame) {
+    const svg = this.baseSvg();
+    const tree = extra.tree;
+    const pos = new Map();
+    function place(node, x, y, spread) {
+      if (!node) return;
+      pos.set(node.key, { x, y, node });
+      place(node.l, x - spread, y + 70, spread / 2);
+      place(node.r, x + spread, y + 70, spread / 2);
+    }
+    place(tree, 400, 50, 150);
+    for (const { x, y, node } of pos.values()) {
+      for (const child of [node.l, node.r]) {
+        if (!child) continue;
+        const p = pos.get(child.key);
+        svg.appendChild(el('line', { x1: x, y1: y, x2: p.x, y2: p.y, stroke: C.edge, 'stroke-width': 2 }));
+      }
+    }
+    for (const { x, y, node } of pos.values()) {
+      const red = node.color === 'R';
+      svg.appendChild(el('circle', {
+        cx: x, cy: y, r: 22,
+        fill: red ? '#5a2430' : '#0b1220',
+        stroke: red ? C.alert : C.text,
+        'stroke-width': 2,
+      }));
+      const t = el('text', {
+        x, y, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        fill: C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13,
+      });
+      t.textContent = `${node.key}`;
+      svg.appendChild(t);
+    }
+    const head = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
+    });
+    head.textContent = `red-black · ${extra.rotate ? extra.rotate : 'insert'} · red nodes outlined`;
+    svg.appendChild(head);
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  stree(extra, frame) {
+    const svg = this.baseSvg();
+    const tree = extra.tree;
+    const pos = new Map();
+    let nextY = 50;
+    function place(node, x, depth) {
+      if (!node) return;
+      const y = 40 + depth * 48;
+      pos.set(node.id, { x, y, node });
+      const kids = node.children || [];
+      kids.forEach((c, i) => {
+        place(c, x + (i - (kids.length - 1) / 2) * Math.max(40, 80 / (depth + 1)), depth + 1);
+      });
+    }
+    place(tree, 400, 0);
+    for (const { x, y, node } of pos.values()) {
+      for (const c of node.children || []) {
+        const p = pos.get(c.id);
+        if (!p) continue;
+        svg.appendChild(el('line', { x1: x, y1: y + 14, x2: p.x, y2: p.y - 14, stroke: C.edge }));
+        const lab = el('text', {
+          x: (x + p.x) / 2, y: (y + p.y) / 2,
+          'text-anchor': 'middle', fill: C.link, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 11,
+        });
+        lab.textContent = c.edge;
+        svg.appendChild(lab);
+      }
+    }
+    for (const { x, y } of pos.values()) {
+      svg.appendChild(el('circle', { cx: x, cy: y, r: 8, fill: C.cell, stroke: C.link }));
+    }
+    const head = el('text', {
+      x: 28, y: 36, fill: C.muted, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12,
+    });
+    head.textContent = `suffix tree · pattern "${extra.pat || ''}"`;
+    svg.appendChild(head);
+    this.msg(svg, frame);
+    this.mount(svg);
+  }
+
+  gadget(extra, frame) {
+    const svg = this.baseSvg();
+    const inp = extra.input || [];
+    const out = extra.output || [];
+    const t0 = el('text', {
+      x: 40, y: 50, fill: C.compare, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 14,
+    });
+    t0.textContent = `clause gadget · input (${inp.join(' ∨ ')})`;
+    svg.appendChild(t0);
+    out.forEach((c, i) => {
+      const t = el('text', {
+        x: 50, y: 100 + i * 36, fill: C.text, 'font-family': 'IBM Plex Mono, monospace', 'font-size': 14,
+      });
+      t.textContent = `(${c.join(' ∨ ')})`;
+      svg.appendChild(t);
+    });
+    this.msg(svg, frame);
     this.mount(svg);
   }
 }

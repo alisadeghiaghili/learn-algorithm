@@ -236,6 +236,80 @@ export const lessons = {
     <p><strong>UF.</strong> Inverse-Ackermann α(n) via path compression analysis (tarjan) — do not call it O(1) in an exam.</p>
     <p><strong>Stack multipop.</strong> Multipop amortized O(1) with accounting (each element pushed once).</p>
   `,
+
+  mom: `
+    <p><strong>Problem.</strong> Select k-th smallest in worst-case Θ(n).</p>
+    <p><strong>BFPRT.</strong></p>
+    <ol>
+      <li>Group into ⌈n/5⌉ blocks of 5, sort each (constant), take medians.</li>
+      <li>Recursively select the median of those medians as pivot.</li>
+      <li>Partition. Recurse only one side.</li>
+    </ol>
+    <p><strong>Why linear.</strong> Pivot has ≥ 3n/10 elements on each side (for n ≥ 50). Recurrence:</p>
+    <p>T(n) ≤ T(n/5) + T(7n/10) + O(n) = O(n)</p>
+    <p>because 1/5 + 7/10 = 9/10 &lt; 1.</p>
+    <p><strong>vs randomized select.</strong> Expected O(n) is simpler; BFPRT is the deterministic worst-case exam answer.</p>
+  `,
+
+  fft: `
+    <p><strong>Goal.</strong> Multiply degree-n polynomials in Θ(n log n).</p>
+    <p><strong>DFT.</strong> Evaluate A and B at n roots of unity (complex), pointwise multiply, inverse DFT.</p>
+    <p><strong>FFT.</strong> Cooley–Tukey butterfly: divide by even/odd indices. T(n)=2T(n/2)+Θ(n).</p>
+    <p><strong>Roots of unity.</strong> ω = e^{2πi/n}, ω^n = 1, ω^{n/2} = −1. Halving identity collapses the DFT.</p>
+    <p><strong>Uses.</strong> Integer multiplication (Schönhage–Strassen), convolution, string matching with wildcards, large 0/1 knapsack via FFT, circuit complexity demos.</p>
+    <p><strong>Exam trap.</strong> FFT is Θ(n log n) <em>over ℂ or a suitable finite field</em>; bit-complexity of complex mul must be tracked for integer multiplication bounds.</p>
+  `,
+
+  matroid: `
+    <p><strong>Independence system.</strong> (E, ℐ) with ∅ ∈ ℐ and hereditary (downward closed).</p>
+    <p><strong>Matroid.</strong> Independence system + <em>exchange</em>: if |A| &lt; |B| and A,B ∈ ℐ then ∃ x ∈ B∖A with A∪{x} ∈ ℐ.</p>
+    <p><strong>Weighted basis theorem.</strong> Greedy (sort by weight desc, take if independent) is optimal on a matroid.</p>
+    <p><strong>Proof idea.</strong> Exchange upgrades any optimal basis step-by-step to the greedy basis without decreasing weight.</p>
+    <p><strong>Examples.</strong></p>
+    <ul>
+      <li>Graphic matroid: independent = forests. Greedy = Kruskal.</li>
+      <li>Uniform matroid U_{k,n}: independent = |S| ≤ k. Greedy = top-k.</li>
+      <li>Linear matroid: independent = linearly independent vectors.</li>
+    </ul>
+    <p><strong>Not a matroid.</strong> Sets of size exactly k (not hereditary). 0/1 knapsack (no exchange in general).</p>
+  `,
+
+  approx: `
+    <p><strong>When NP-hard.</strong> Drop exactness; guarantee α-approx: cost ≤ α·OPT (min) or ≥ OPT/α (max).</p>
+    <p><strong>Vertex cover 2-approx.</strong> Take any maximal matching; output all its endpoints.</p>
+    <ul>
+      <li>Correct: every edge is hit (maximality).</li>
+      <li>2-approx: |cover| = 2|M| ≤ 2·OPT because |M| ≤ OPT (matching is a lower bound on cover).</li>
+    </ul>
+    <p><strong>Set cover.</strong> Greedy (pick set covering most uncovered) gives H(n) ≈ ln n approx — best possible under standard assumptions.</p>
+    <p><strong>Knapsack PTAS.</strong> Trim values geometrically → DP on reduced values. For any ε &gt; 0: (1−ε) in time f(1/ε)·n.</p>
+    <p><strong>Hardness of approx.</strong> Vertex cover is NP-hard to approx within 2−ε (unique games conjecture: 2−ε; PCP: 1.36…).</p>
+  `,
+
+  rbtree: `
+    <p><strong>Properties.</strong></p>
+    <ol>
+      <li>Every node red or black.</li>
+      <li>Root black.</li>
+      <li>No red node has a red child (no red-red).</li>
+      <li>All root-to-NIL paths have the same black-height.</li>
+    </ol>
+    <p><strong>Height bound.</strong> h ≤ 2 log₂(n+1). Guaranteed Θ(log n).</p>
+    <p><strong>Insert fixup.</strong> New node red. If parent red, cases:</p>
+    <ul>
+      <li>Uncle red → recolor (push blackness up).</li>
+      <li>Uncle black, line/triangle → rotate then recolor (LL/RR/LR/RL).</li>
+    </ul>
+    <p><strong>Exam distinction.</strong> AVL stricter → faster lookup. RB fewer rotations → faster updates. Both Θ(log n).</p>
+  `,
+
+  suffixTree: `
+    <p><strong>Suffix tree.</strong> Compacted trie of all suffixes of T. Edges labeled with substrings.</p>
+    <p><strong>Applications.</strong> Pattern matching O(|P|), longest repeated substring, longest common substring of 2+ strings, tandem repeats.</p>
+    <p><strong>Construction.</strong> Ukkonen O(n) over alphabet; simple online insert is O(n²). Prefix-doubling suffix <em>array</em> is the practical O(n log n) alternative.</p>
+    <p><strong>Match rule.</strong> Walk P along edges; success iff the walk consumes all of P.</p>
+    <p><strong>Exam skill.</strong> Draw the tree for T="banana$" and locate "ana".</p>
+  `,
 };
 
 /**

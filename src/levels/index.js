@@ -1006,7 +1006,7 @@ export const sequences = {
 
   proof: {
     name: 'proof drills',
-    blurb: 'Invariants, lower bounds, reductions',
+    blurb: 'Invariants, lower bounds, reductions, autograded',
     levels: [
       {
         id: 'proof-1',
@@ -1025,6 +1025,42 @@ export const sequences = {
         win: (ctx) => {
           const a = ctx.state.meta.answers || {};
           return a['1'] === 'b' && a['2'] === 'b' && a['3'] === 'a';
+        },
+      },
+      {
+        id: 'proof-auto-1',
+        name: 'Autograded: insertion proof',
+        desc: 'Fill in the correctness skeleton',
+        par: 3,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'proof', algo: 'insertion-invariant', array: [],
+          meta: { bank: 'insertion-invariant', answers: {} },
+        },
+        intro:
+          '<p>Structured proof steps. Use <code>answer &lt;fill-or-choice&gt;</code>.</p>' +
+          '<p>Bank: insertion-invariant (3 steps).</p>',
+        goal: 'All steps in bank insertion-invariant correct.',
+        win: (ctx) => ctx.state.meta.proofDone === true,
+      },
+      {
+        id: 'proof-auto-2',
+        name: 'Autograded: binary + Dijkstra',
+        desc: 'Two invariant banks',
+        par: 4,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'proof', algo: 'binary-invariant', array: [],
+          meta: { bank: 'binary-invariant', answers: {} },
+        },
+        intro:
+          '<p>Complete binary-invariant (3 steps), then retry with bank dijkstra-invariant:</p>' +
+          '<p><code>set proof dijkstra-invariant</code> · <code>run</code></p>' +
+          '<p>Win requires both banks’ proofDone flags — solve binary first, then switch and solve Dijkstra.</p>',
+        goal: 'Finish binary-invariant AND dijkstra-invariant banks.',
+        win: (ctx) => {
+          const w = ctx.state.meta;
+          return w.proofDone === true && (w.proofBanksDone?.includes('binary-invariant')) && (w.proofBanksDone?.includes('dijkstra-invariant'));
         },
       },
       {
@@ -1066,6 +1102,20 @@ export const sequences = {
         win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.phase === 'ready'),
       },
       {
+        id: 'proof-3b',
+        name: 'Clause splitter gadget',
+        desc: 'Long clause → 3-CNF chain',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'np', algo: 'gadget', array: [],
+          meta: { clause: ['a', 'b', 'c', 'd', 'e'] },
+        },
+        intro: '<p><code>lesson npGadget</code></p><p>Fresh y’s enforce the OR semantics.</p>',
+        goal: 'Run clause gadget to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.output?.length >= 2),
+      },
+      {
         id: 'proof-4',
         name: 'AVL rebalance',
         desc: 'Watch LL/RR/LR/RL rotations',
@@ -1097,6 +1147,160 @@ export const sequences = {
           return a['1'] === 'b' && a['2'] === 'b';
         },
       },
+      {
+        id: 'proof-auto-3',
+        name: 'Autograded: greedy + NP',
+        desc: 'Exchange argument + reduction',
+        par: 6,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'proof', algo: 'greedy-exchange', array: [],
+          meta: { bank: 'greedy-exchange', answers: {}, proofBanksDone: [] },
+        },
+        intro:
+          '<p>Finish banks <code>greedy-exchange</code> and <code>np-reduction</code>:</p>' +
+          '<p><code>set proof greedy-exchange</code> · <code>run</code> · answer all</p>' +
+          '<p>then <code>set proof np-reduction</code> · <code>run</code> · answer all</p>',
+        goal: 'Both banks complete and all-correct.',
+        win: (ctx) => {
+          const d = ctx.state.meta.proofBanksDone || [];
+          return d.includes('greedy-exchange') && d.includes('np-reduction');
+        },
+      },
+      {
+        id: 'proof-auto-4',
+        name: 'Autograded: MT + amortized + LB',
+        desc: 'Three analysis banks',
+        par: 9,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'proof', algo: 'master-thm', array: [],
+          meta: { bank: 'master-thm', answers: {}, proofBanksDone: [] },
+        },
+        intro:
+          '<p>Banks: <code>master-thm</code>, <code>amortized-potential</code>, <code>lower-bound</code>.</p>',
+        goal: 'All three banks complete and all-correct.',
+        win: (ctx) => {
+          const d = ctx.state.meta.proofBanksDone || [];
+          return (
+            d.includes('master-thm') &&
+            d.includes('amortized-potential') &&
+            d.includes('lower-bound')
+          );
+        },
+      },
+    ],
+  },
+
+  peak: {
+    name: 'advanced depth',
+    blurb: 'MOM, FFT, matroid, RB, suffix tree, approximation',
+    levels: [
+      {
+        id: 'peak-mom',
+        name: 'Median of Medians',
+        desc: 'Deterministic Θ(n) select',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'array', mode: 'search', algo: 'mom', array: [7, 2, 9, 1, 5, 3, 8, 4, 6, 10], meta: { k: 4 },
+        },
+        intro: '<p><code>lesson mom</code></p><p>Groups of 5 → median of medians → 30/70 split → T(n)≤T(n/5)+T(7n/10)+O(n).</p>',
+        goal: 'Run MOM select to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.found != null),
+      },
+      {
+        id: 'peak-fft',
+        name: 'Polynomial multiply / FFT',
+        desc: 'Naive O(n²) vs butterfly',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'dc', algo: 'fft', array: [],
+          meta: { pa: [1, 2, 3], pb: [4, 5, 6] },
+        },
+        intro: '<p><code>lesson fft</code></p><p>Pad to 2^k, butterfly layers, pointwise mul, iFFT.</p>',
+        goal: 'Run poly multiply + FFT narrative.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.stage === 'done'),
+      },
+      {
+        id: 'peak-matroid',
+        name: 'Matroid greedy',
+        desc: 'Uniform matroid top-k',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'greedy', algo: 'matroid', array: [],
+          meta: { weights: [8, 6, 5, 4, 3], k: 3 },
+        },
+        intro: '<p><code>lesson matroid</code></p><p>Exchange argument → greedy optimal.</p>',
+        goal: 'Run matroid greedy to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.total != null),
+      },
+      {
+        id: 'peak-vc',
+        name: 'Vertex cover 2-approx',
+        desc: 'Maximal matching endpoints',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'graph', mode: 'graph', algo: 'vc', graph: null, meta: {},
+        },
+        intro: '<p><code>lesson approx</code></p><p>|cover|=2|M| ≤ 2·OPT.</p>',
+        goal: 'Run 2-approx to completion.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.approx === 2),
+      },
+      {
+        id: 'peak-rb',
+        name: 'Red-Black insert',
+        desc: 'Recolor + rotations',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'ds', algo: 'rb', array: [],
+          meta: { keys: [10, 20, 30, 15, 25] },
+        },
+        intro: '<p><code>lesson rbtree</code></p><p>4 properties. Height ≤ 2 log(n+1).</p>',
+        goal: 'Run RB inserts and see a rotation/recolor.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.rotate || f.extra?.done),
+      },
+      {
+        id: 'peak-stree',
+        name: 'Suffix tree match',
+        desc: 'Walk pattern in tree',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree', mode: 'string', algo: 'stree', array: [],
+          meta: { text: 'banana', pat: 'ana' },
+        },
+        intro: '<p><code>lesson suffixTree</code></p><p>Compacted trie of suffixes. Match O(|P|).</p>',
+        goal: 'Run suffix-tree match.',
+        win: (ctx) => ctx.engine.done && ctx.engine.frames.some((f) => f.extra?.match != null),
+      },
+      {
+        id: 'peak-exam',
+        name: 'Peak exam',
+        desc: 'MOM / FFT / matroid / approx / RB',
+        par: 5,
+        kind: 'analysis',
+        setup: { kind: 'array', mode: 'quiz', algo: 'peak', array: [0], meta: { answers: {} } },
+        intro:
+          '<ol>' +
+          '<li>MOM recurrence? a) T(n/2)+T(n/2) b) T(n/5)+T(7n/10)+O(n) c) 2T(n/2)+n² d) n log n</li>' +
+          '<li>FFT poly mult? a) O(n²) b) O(n log n) c) O(n) d) O(log n)</li>' +
+          '<li>Greedy optimal iff independence system is? a) any b) matroid c) knapsack d) graph</li>' +
+          '<li>VC 2-approx uses? a) DFS b) maximal matching endpoints c) MST d) hash</li>' +
+          '<li>RB height bound? a) n b) log n exact c) ≤2 log(n+1) d) n/2</li>' +
+          '</ol><p>Answers: b, b, b, b, c</p>',
+        goal: 'All 5 correct.',
+        win: (ctx) => {
+          const a = ctx.state.meta.answers || {};
+          return (
+            a['1'] === 'b' && a['2'] === 'b' && a['3'] === 'b' && a['4'] === 'b' && a['5'] === 'c'
+          );
+        },
+      },
     ],
   },
 };
@@ -1114,6 +1318,7 @@ export const sequenceOrder = [
   'np',
   'randomized',
   'proof',
+  'peak',
 ];
 
 /**

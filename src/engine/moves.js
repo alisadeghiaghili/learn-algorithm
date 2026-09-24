@@ -10,6 +10,10 @@ import { AVL } from '../algorithms/avl.js';
 import { GREEDY, STRINGS, FLOW, NP, DC, THEORYRUN } from '../algorithms/extras.js';
 import { STRINGS_EXTRA, RANDOMIZED } from '../algorithms/stringsExtra.js';
 import { NP_BUILD } from '../algorithms/npBuild.js';
+import { SELECT_MOM } from '../algorithms/mom.js';
+import { PEAK } from '../algorithms/peak.js';
+import { GADGETS } from '../algorithms/gadgets.js';
+import { createProofSession, proofFrames, proofBanks } from '../algorithms/proofEngine.js';
 
 /**
  * Auto runners keyed by mode:algo
@@ -24,7 +28,9 @@ export function buildAutoFrames(state) {
     return (SORTERS[algo] || SORTERS.bubble)(state.array);
   }
   if (mode === 'search') {
-    if (algo === 'select') return quickSelect(state.array, state.meta.k ?? 0);
+    if (algo === 'select' || algo === 'mom') {
+      return SELECT_MOM.medianOfMediansSelect(state.array, state.meta.k ?? 0);
+    }
     let arr = state.array.slice();
     if (algo === 'binary') arr = arr.slice().sort((x, y) => x - y);
     const target = state.target ?? arr[Math.floor(arr.length / 3)];
@@ -33,6 +39,7 @@ export function buildAutoFrames(state) {
     return (SEARCHERS[algo] || SEARCHERS.linear)(arr, target);
   }
   if (mode === 'graph') {
+    if (algo === 'vc') return PEAK.vertexCover2Approx(state.graph);
     if (GRAPHERS_EXTRA[algo]) return GRAPHERS_EXTRA[algo](state.graph, 0);
     return (GRAPHERS[algo] || GRAPHERS.bfs)(state.graph, 0);
   }
@@ -46,6 +53,9 @@ export function buildAutoFrames(state) {
   if (mode === 'greedy') {
     if (algo === 'huffman') {
       return GREEDY.huffman(state.meta.freq || { A: 5, B: 2, C: 1, D: 1 });
+    }
+    if (algo === 'matroid') {
+      return PEAK.matroidGreedy(state.meta.weights || [8, 6, 5, 4, 3], state.meta.k ?? 3);
     }
     return GREEDY.activitySelection(
       state.meta.acts || [
@@ -61,6 +71,9 @@ export function buildAutoFrames(state) {
     );
   }
   if (mode === 'string') {
+    if (algo === 'stree') {
+      return PEAK.suffixTreeMatch(state.meta.text || 'banana', state.meta.pat || 'ana');
+    }
     if (STRINGS_EXTRA[algo]) return STRINGS_EXTRA[algo](state.meta.text || 'AABAABAAB');
     const text = state.meta.text || 'AABAABAAB';
     const pat = state.meta.pat || 'AAB';
@@ -68,6 +81,7 @@ export function buildAutoFrames(state) {
   }
   if (mode === 'ds') {
     if (algo === 'avl') return AVL.avlInserts(state.meta.keys || [30, 20, 10, 25, 28, 5, 40]);
+    if (algo === 'rb') return PEAK.redBlackInserts(state.meta.keys || [10, 20, 30, 15, 25]);
     if (algo === 'bst' || algo === 'bst-insert') {
       return STRUCTURES.bstInserts(state.meta.keys || [8, 3, 10, 1, 6, 14, 4, 7, 13]);
     }
@@ -103,6 +117,9 @@ export function buildAutoFrames(state) {
         ],
       });
     }
+    if (algo === 'gadget') {
+      return GADGETS.clauseTo3Cnf(state.meta.clause || ['a', 'b', 'c', 'd', 'e']);
+    }
     const key = ['sat-3sat', '3sat-clique', 'clique-vc'].includes(algo) ? algo : 'sat-3sat';
     return NP.npReduction(key);
   }
@@ -118,6 +135,9 @@ export function buildAutoFrames(state) {
       return DC.closestPair(state.meta.points || [
         [2, 3], [12, 30], [40, 50], [5, 1], [12, 10], [3, 4],
       ]);
+    }
+    if (algo === 'fft' || algo === 'poly') {
+      return PEAK.polyMultiply(state.meta.pa || [1, 2, 3], state.meta.pb || [4, 5, 6]);
     }
     return THEORYRUN.masterTheorem(
       state.meta.a ?? 2,
@@ -135,6 +155,12 @@ export function buildAutoFrames(state) {
       state.meta.fPower ?? 1,
       state.meta.logPow ?? 0,
     );
+  }
+  if (mode === 'proof') {
+    const bank = proofBanks[state.meta.bank || state.algo] || proofBanks['insertion-invariant'];
+    const session = createProofSession(bank);
+    state.meta._proofSession = { bankName: state.meta.bank || state.algo, idx: 0, log: [] };
+    return proofFrames(session, state.meta.bank || state.algo);
   }
 
   return [
@@ -268,7 +294,12 @@ export function playerMove(name, args, state) {
     }
     case 'answer': {
       const q = String(args[0]);
-      const choice = String(args[1]).toLowerCase();
+      const rest = args.slice(1).join(' ');
+      const choice = String(rest).toLowerCase();
+      // proof session path
+      if (state.meta._proofSession || state.mode === 'proof') {
+        return proofSubmit(state, choice || q);
+      }
       const answers = state.meta.answers || (state.meta.answers = {});
       answers[q] = choice;
       return {
@@ -293,4 +324,37 @@ export function playerMove(name, args, state) {
 
 function valid(i, n) {
   return Number.isInteger(i) && i >= 0 && i < n;
+}
+
+function proofSubmit(state, input) {
+  const bankName = state.meta.bank || state.algo || 'insertion-invariant';
+  const bank = proofBanks[bankName] || proofBanks['insertion-invariant'];
+  const st = state.meta._proofSession || (state.meta._proofSession = { idx: 0, log: [], bankName });
+  if (st.bankName !== bankName) {
+    // finished previous bank
+    if (st.idx >= bank.length || state.meta.proofDone) {
+      const done = state.meta.proofBanksDone || (state.meta.proofBanksDone = []);
+      if (!done.includes(st.bankName)) done.push(st.bankName);
+    }
+    st.bankName = bankName;
+    st.idx = 0;
+    st.log = [];
+    state.meta.proofDone = false;
+  }
+  const session = createProofSession(bank);
+  for (let i = 0; i < st.idx; i += 1) {
+    session.submit(bank[i].answer[0]);
+  }
+  const res = session.submit(input);
+  if (res.ok) st.idx = session.index;
+  st.log.push({ input, ok: res.ok });
+  state.meta._proofIdx = st.idx;
+  state.meta.proofDone = session.done && session.allCorrect;
+  if (state.meta.proofDone) {
+    const done = state.meta.proofBanksDone || (state.meta.proofBanksDone = []);
+    if (!done.includes(bankName)) done.push(bankName);
+  }
+  const frames = proofFrames(session, bankName);
+  frames[0].message = res.ok ? `✓ ${frames[0].message}` : `✗ ${res.why}`;
+  return frames[0];
 }

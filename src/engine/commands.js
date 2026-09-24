@@ -42,16 +42,18 @@ const HELP_LINES = [
   '',
   'algorithms',
   '  set sort NAME        bubble|selection|insertion|merge|quick|heap|counting|radix|bucket',
-  '  set search NAME      linear|binary|select',
-  '  set graph NAME       bfs|dfs|dijkstra|prim|kruskal|bellman|floyd|topo',
+  '  set search NAME      linear|binary|select|mom',
+  '  set graph NAME       bfs|dfs|dijkstra|prim|kruskal|bellman|floyd|topo|scc|vc',
   '  set dp NAME          fib|coin|lcs|knapsack|rod|chain',
-  '  set ds NAME          bst|bst-search|heap|uf|hash',
-  '  set greedy NAME      activity|huffman',
-  '  set string NAME      kmp|rk',
+  '  set ds NAME          bst|bst-search|heap|uf|hash|avl|rb',
+  '  set greedy NAME      activity|huffman|matroid',
+  '  set string NAME      kmp|rk|z|sa|stree',
   '  set flow ek          Edmonds-Karp max-flow',
-  '  set np NAME          sat-3sat|3sat-clique|clique-vc',
-  '  set dc NAME          closest|master',
+  '  set np NAME          sat-3sat|3sat-clique|clique-vc|build|gadget',
+  '  set dc NAME          closest|master|fft',
   '  set theory master   Master Theorem',
+  '  set random freivalds Monte Carlo check',
+  '  set proof NAME       autograded bank (insertion-invariant|binary-invariant|…)',
   '  run                  generate steps for current setup',
   '',
   'manual (levels / golf)',
@@ -260,23 +262,27 @@ function handleSet(ctx, args) {
   const name = (args[1] || '').toLowerCase();
   const map = {
     sort: ['bubble', 'selection', 'insertion', 'merge', 'quick', 'heap', 'counting', 'radix', 'bucket'],
-    search: ['linear', 'binary', 'select'],
-    graph: ['bfs', 'dfs', 'dijkstra', 'prim', 'kruskal', 'bellman', 'floyd', 'topo', 'scc'],
+    search: ['linear', 'binary', 'select', 'mom'],
+    graph: ['bfs', 'dfs', 'dijkstra', 'prim', 'kruskal', 'bellman', 'floyd', 'topo', 'scc', 'vc'],
     dp: ['fib', 'coin', 'lcs', 'knapsack', 'rod', 'chain'],
-    ds: ['bst', 'bst-insert', 'bst-search', 'heap', 'uf', 'hash', 'avl'],
-    greedy: ['activity', 'huffman'],
-    string: ['kmp', 'rk', 'z', 'sa'],
+    ds: ['bst', 'bst-insert', 'bst-search', 'heap', 'uf', 'hash', 'avl', 'rb'],
+    greedy: ['activity', 'huffman', 'matroid'],
+    string: ['kmp', 'rk', 'z', 'sa', 'stree'],
     flow: ['flow', 'ek'],
-    np: ['sat-3sat', '3sat-clique', 'clique-vc', 'build', 'clique-build'],
-    dc: ['closest', 'master', 'karatsuba'],
+    np: ['sat-3sat', '3sat-clique', 'clique-vc', 'build', 'clique-build', 'gadget'],
+    dc: ['closest', 'master', 'karatsuba', 'fft', 'poly'],
     theory: ['master', 'asymptotics', 'recurrences'],
     random: ['freivalds', 'mc'],
+    proof: ['insertion-invariant', 'binary-invariant', 'dijkstra-invariant', 'greedy-exchange', 'np-reduction', 'master-thm', 'amortized-potential', 'lower-bound'],
   };
   if (!map[domain] || !map[domain].includes(name)) {
     ctx.log(`usage: set ${domain} ${map[domain] ? map[domain].join('|') : '…'}`, 'err');
     return;
   }
   ctx.state.algo = name === 'flow' || name === 'ek' ? 'ek' : name === 'freivalds' || name === 'mc' ? 'freivalds' : name;
+  if (domain === 'proof') {
+    ctx.state.meta.bank = name;
+  }
   ctx.state.mode = domain;
   if (domain === 'sort' || domain === 'search') ctx.state.kind = 'array';
   if (domain === 'graph') {
@@ -285,7 +291,7 @@ function handleSet(ctx, args) {
     else if (!ctx.state.graph?.nodes?.length) ctx.state.graph = graphPresets().star;
   }
   if (domain === 'dp') ctx.state.kind = 'matrix';
-  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory' || domain === 'random') {
+  if (domain === 'ds' || domain === 'greedy' || domain === 'string' || domain === 'np' || domain === 'dc' || domain === 'theory' || domain === 'random' || domain === 'proof') {
     ctx.state.kind = 'tree';
   }
   if (domain === 'flow') {
