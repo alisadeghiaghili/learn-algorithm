@@ -8,7 +8,7 @@
  * @param {number} n
  */
 export function fib(n = 10) {
-  const N = Math.max(1, Math.min(20, n));
+  const N = Math.max(0, Math.min(20, Math.floor(n)));
   const frames = [];
   const dp = Array(N + 1).fill(null);
   dp[0] = 0;
