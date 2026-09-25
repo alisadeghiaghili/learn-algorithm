@@ -496,6 +496,12 @@ input {
   padding: 24px;
 }
 
+.modal-root[hidden],
+.toast[hidden],
+.side-panel[hidden] {
+  display: none !important;
+}
+
 .modal {
   width: min(920px, 100%);
   max-height: min(80vh, 720px);

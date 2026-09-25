@@ -16,6 +16,7 @@ import { GADGETS } from '../algorithms/gadgets.js';
 import { createProofSession, proofFrames, proofBanks } from '../algorithms/proofEngine.js';
 import { masteryBanks, gradeMastery } from '../curriculum/mastery.js';
 import { proofWritingTasks, gradeProofDraft } from '../algorithms/proofWriter.js';
+import { workedProblems, selfCheckWorked } from '../curriculum/worked.js';
 
 /**
  * Auto runners keyed by mode:algo
@@ -190,6 +191,25 @@ export function buildAutoFrames(state) {
           fields: task.fields.map((f) => ({ id: f.id, label: f.label, hint: f.hint })),
           status: {},
           setup: task.setup,
+        },
+      },
+    ];
+  }
+  if (mode === 'worked') {
+    const id = state.meta.workedId || state.algo || 'wp-sort-inv';
+    const p = workedProblems.find((x) => x.id === id) || workedProblems[0];
+    state.meta.workedId = p.id;
+    state.meta.workedShown = false;
+    return [
+      {
+        type: 'info',
+        message: `worked problem ${p.id}: ${p.problem.slice(0, 100)}…`,
+        extra: {
+          kind: 'prooWrite',
+          title: `Worked · ${p.unit}`,
+          fields: p.steps.map((s, i) => ({ id: `s${i}`, label: `Step ${i + 1}`, hint: s })),
+          status: {},
+          setup: p.problem,
         },
       },
     ];
@@ -390,6 +410,55 @@ export function playerMove(name, args, state) {
     case 'field': {
       // field <id> <text...> for proof writer
       return proofWriteSubmit(state, args);
+    }
+    case 'worked': {
+      const sub = (args[0] || '').toLowerCase();
+      const id = state.meta.workedId || 'wp-sort-inv';
+      const p = workedProblems.find((x) => x.id === id) || workedProblems[0];
+      if (sub === 'show' || sub === 'solution' || !sub) {
+        state.meta.workedShown = true;
+        return {
+          type: 'done',
+          message: p.solution,
+          extra: {
+            kind: 'prooWrite',
+            title: `Solution · ${p.id}`,
+            fields: p.steps.map((s, i) => ({ id: `s${i}`, label: `Step ${i + 1}`, hint: s })),
+            status: Object.fromEntries(p.steps.map((_, i) => [`s${i}`, true])),
+            setup: p.problem,
+            allOk: true,
+          },
+        };
+      }
+      if (sub === 'check') {
+        const text = args.slice(1).join(' ');
+        const r = selfCheckWorked(p, text);
+        return {
+          type: r.ok ? 'set' : 'info',
+          message: r.ok
+            ? `self-check ok · hit ${r.hit.join(', ')}`
+            : `self-check · need more of: ${r.need.join(', ')}`,
+          extra: {
+            kind: 'prooWrite',
+            title: `Check · ${p.id}`,
+            fields: p.steps.map((s, i) => ({ id: `s${i}`, label: `Step ${i + 1}`, hint: s })),
+            status: {},
+            setup: p.problem,
+          },
+        };
+      }
+      // set worked id
+      const next = workedProblems.find((x) => x.id === sub || x.id === args.join(''));
+      if (next) {
+        state.meta.workedId = next.id;
+        state.meta.workedShown = false;
+        return {
+          type: 'info',
+          message: `worked problem → ${next.id}`,
+          extra: { kind: 'prooWrite', title: next.id, fields: [], status: {} },
+        };
+      }
+      throw new Error('usage: worked show | worked check "text" | worked <id>');
     }
     case 'insert':
     case 'bst': {

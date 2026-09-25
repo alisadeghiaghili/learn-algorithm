@@ -24,6 +24,7 @@ const C = {
  * Multi-kind visualizer dispatcher for advanced extras.
  */
 import { PreciseViz } from './preciseViz.js';
+import { renderPolished } from './polished.js';
 
 export class ExtraViz {
   constructor(root) {
@@ -42,6 +43,15 @@ export class ExtraViz {
     if (!kind) return false;
     // precise layer first
     if (this.precise.render(frame)) return true;
+    // polished structural layer
+    const polishedKinds = ['tree', 'rb', 'heap', 'hash', 'flow', 'matroid', 'vc'];
+    if (polishedKinds.includes(kind)) {
+      const svg = renderPolished(extra, frame, kind);
+      if (svg) {
+        this.mount(svg);
+        return true;
+      }
+    }
     switch (kind) {
       case 'tree':
         this.tree(extra, frame);

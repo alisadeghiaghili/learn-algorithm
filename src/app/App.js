@@ -205,8 +205,10 @@ export class App {
     const solved = allLevels().filter((l) => this.progress[l.id] != null).length;
     const total = allLevels().length;
 
-    this.dom.modalRoot.hidden = false;
-    this.dom.modalRoot.innerHTML =
+    // reset listeners by replacing node contents only; use onclick props (no stacking)
+    const root = this.dom.modalRoot;
+    root.hidden = false;
+    root.innerHTML =
       `<div class="modal" role="dialog" aria-label="Levels">` +
       `<div class="modal-head"><div>` +
       `<h2 class="modal-title">Levels</h2>` +
@@ -216,24 +218,28 @@ export class App {
       `<div class="level-list">${rows}</div>` +
       `</div>`;
 
-    this.dom.modalRoot.querySelector('#modal-close').addEventListener('click', () => {
-      this.dom.modalRoot.hidden = true;
-    });
-    this.dom.modalRoot.addEventListener('click', (e) => {
-      if (e.target === this.dom.modalRoot) this.dom.modalRoot.hidden = true;
-    });
-    this.dom.modalRoot.querySelectorAll('[data-tab]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this._tab = btn.getAttribute('data-tab');
+    root.onclick = (e) => {
+      if (e.target === root) {
+        root.hidden = true;
+        return;
+      }
+      const close = e.target.closest?.('#modal-close');
+      if (close) {
+        root.hidden = true;
+        return;
+      }
+      const tab = e.target.closest?.('[data-tab]');
+      if (tab) {
+        this._tab = tab.getAttribute('data-tab');
         this.openLevels();
-      });
-    });
-    this.dom.modalRoot.querySelectorAll('[data-level]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this.dom.modalRoot.hidden = true;
-        this.loadLevel(btn.getAttribute('data-level'));
-      });
-    });
+        return;
+      }
+      const lv = e.target.closest?.('[data-level]');
+      if (lv) {
+        root.hidden = true;
+        this.loadLevel(lv.getAttribute('data-level'));
+      }
+    };
   }
 
   loadLevel(id) {

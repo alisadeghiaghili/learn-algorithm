@@ -4,53 +4,67 @@
 
 /**
  * @param {number[]} input
- * @param {number} [k] max key + 1
+ * @param {number} [k] max key + 1 (ignored if keys can be negative; computed)
  */
 export function countingSort(input, k) {
   const a = input.slice();
-  const maxVal = k ?? (a.length ? Math.max(...a) : 0);
-  const n = a.length;
+  if (!a.length) {
+    return [
+      {
+        type: 'done',
+        array: [],
+        sorted: [],
+        message: 'sorted · empty',
+        extra: { kind: 'count', count: [], phase: 'done' },
+      },
+    ];
+  }
+  // support negative keys by shifting to 0..range
+  const min = Math.min(...a);
+  const max = Math.max(...a);
+  const range = max - min; // inclusive span
   const frames = [];
-  const count = Array.from({ length: maxVal + 1 }, () => 0);
+  const count = Array.from({ length: range + 1 }, () => 0);
+  const offset = min;
   frames.push({
     type: 'info',
     array: a.slice(),
-    message: `counting sort · keys 0..${maxVal} · Θ(n+k)`,
-    extra: { kind: 'count', count: count.slice(), phase: 'count' },
+    message: `counting sort · keys ${min}..${max} · offset=${offset} · Θ(n+k)`,
+    extra: { kind: 'count', count: count.slice(), phase: 'count', offset },
   });
 
-  for (let i = 0; i < n; i += 1) {
-    count[a[i]] += 1;
+  for (let i = 0; i < a.length; i += 1) {
+    count[a[i] - offset] += 1;
     frames.push({
       type: 'set',
       indices: [i],
       array: a.slice(),
-      message: `count[${a[i]}] = ${count[a[i]]}`,
-      extra: { kind: 'count', count: count.slice(), phase: 'count' },
+      message: `count[${a[i]}] = ${count[a[i] - offset]}`,
+      extra: { kind: 'count', count: count.slice(), phase: 'count', offset },
     });
   }
 
-  for (let i = 1; i <= maxVal; i += 1) {
+  for (let i = 1; i <= range; i += 1) {
     count[i] += count[i - 1];
     frames.push({
       type: 'set',
       array: a.slice(),
-      message: `prefix sum count[${i}] = ${count[i]}`,
-      extra: { kind: 'count', count: count.slice(), phase: 'prefix' },
+      message: `prefix sum count[${i + offset}] = ${count[i]}`,
+      extra: { kind: 'count', count: count.slice(), phase: 'prefix', offset },
     });
   }
 
-  const out = Array(n).fill(0);
-  for (let i = n - 1; i >= 0; i -= 1) {
-    const v = a[i];
+  const out = Array(a.length).fill(0);
+  for (let i = a.length - 1; i >= 0; i -= 1) {
+    const v = a[i] - offset;
     count[v] -= 1;
-    out[count[v]] = v;
+    out[count[v]] = a[i];
     frames.push({
       type: 'set',
       indices: [i],
       array: out.slice(),
-      message: `place ${v} at out[${count[v]}] (stable, right-to-left)`,
-      extra: { kind: 'count', count: count.slice(), phase: 'scatter', out: out.slice() },
+      message: `place ${a[i]} at out[${count[v]}] (stable, right-to-left)`,
+      extra: { kind: 'count', count: count.slice(), phase: 'scatter', out: out.slice(), offset },
     });
   }
 
@@ -58,31 +72,37 @@ export function countingSort(input, k) {
     type: 'done',
     array: out.slice(),
     sorted: out.map((_, i) => i),
-    message: 'sorted · O(n+k) stable',
-    extra: { kind: 'count', count: count.slice(), phase: 'done' },
+    message: 'sorted · Θ(n+k) stable (offset handles negatives)',
+    extra: { kind: 'count', count: count.slice(), phase: 'done', offset },
   });
   return frames;
 }
 
 /**
- * LSD radix sort base 10.
+ * LSD radix sort base 10. Shifts by min so negatives work.
  * @param {number[]} input
  */
 export function radixSort(input) {
-  const a = input.slice();
+  const a0 = input.slice();
   const frames = [];
-  const maxVal = a.length ? Math.max(...a) : 0;
+  if (!a0.length) {
+    return [{ type: 'done', array: [], sorted: [], message: 'sorted · empty' }];
+  }
+  const min = Math.min(...a0);
+  // work in non-negative space
+  const a = a0.map((x) => x - min);
+  const maxVal = Math.max(...a);
   frames.push({
     type: 'info',
-    array: a.slice(),
-    message: `radix LSD · max=${maxVal} · O(d(n+k))`,
+    array: a0.slice(),
+    message: `radix LSD · shift=${min} · max=${maxVal} · O(d(n+10))`,
   });
 
   let exp = 1;
   while (Math.floor(maxVal / exp) > 0) {
     frames.push({
       type: 'range',
-      array: a.slice(),
+      array: a.map((x) => x + min),
       message: `counting sort on digit place ${exp}`,
       range: [0, a.length - 1],
     });
@@ -100,17 +120,18 @@ export function radixSort(input) {
       frames.push({
         type: 'set',
         indices: [i],
-        array: a.slice(),
-        message: `digit-place ${exp}: write ${a[i]} at ${i}`,
+        array: a.map((x) => x + min),
+        message: `digit-place ${exp}: write ${a[i] + min} at ${i}`,
       });
     }
     exp *= 10;
   }
+  const final = a.map((x) => x + min);
   frames.push({
     type: 'done',
-    array: a.slice(),
-    sorted: a.map((_, i) => i),
-    message: 'sorted by LSD radix',
+    array: final,
+    sorted: final.map((_, i) => i),
+    message: 'sorted by LSD radix (shift handles negatives)',
   });
   return frames;
 }

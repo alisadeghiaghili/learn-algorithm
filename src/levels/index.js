@@ -1445,6 +1445,38 @@ export const sequences = {
         goal: 'All three fields accepted.',
         win: (ctx) => ctx.state.meta.proofWriteDone === true,
       },
+      ...[
+        ['wp-sort-inv', 'Worked: inversions'],
+        ['wp-select-prove', 'Worked: MOM linear'],
+        ['wp-dag-sp', 'Worked: DAG SP'],
+        ['wp-cut-cite', 'Worked: cut & Kruskal'],
+        ['wp-lcs-code', 'Worked: LCS'],
+        ['wp-np-vc', 'Worked: VC NPC'],
+        ['wp-hash-load', 'Worked: hash load'],
+        ['wp-greedy-ex', 'Worked: activities'],
+        ['wp-fft-mul', 'Worked: FFT mul'],
+        ['wp-dijkstra-proof', 'Worked: Dijkstra proof'],
+      ].map(([id, name]) => ({
+        id,
+        name,
+        desc: 'Exam problem + full solution',
+        par: 1,
+        kind: 'tutorial',
+        setup: {
+          kind: 'tree',
+          mode: 'worked',
+          algo: id,
+          array: [],
+          meta: { workedId: id },
+        },
+        intro:
+          '<p>Read the problem, attempt on paper, then show solution:</p>' +
+          `<p><code>worked ${id}</code> · or <code>worked show</code></p>` +
+          '<p>Self-check with <code>worked check "your keywords"</code></p>' +
+          '<p>See also <code>lesson problemSets</code> · <code>lesson proofsFull</code></p>',
+        goal: 'Review the worked solution (run `worked show`).',
+        win: (ctx) => ctx.state.meta.workedShown === true,
+      })),
     ],
   },
 };

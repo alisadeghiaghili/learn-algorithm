@@ -327,6 +327,42 @@ export const lessons = {
     <p><strong>Substitution for T(n)=2T(n/2)+n.</strong> Guess T(n) ≤ cn log n. T(n) ≤ 2c(n/2)log(n/2)+n = cn log n − cn + n ≤ cn log n for c ≥ 1. Base cases with constant shift. For Θ also prove Ω(n log n) via decision-tree or recurrence. ∎</p>
     <p><strong>Lower bound.</strong> Comparison decision tree has ≥ n! leaves ⇒ height ≥ log₂ n! = Θ(n log n) (Stirling: log n! = n log n − n + O(log n)). ∎</p>
   `,
+
+  problemSets: `
+    <p><strong>How to use the worked set.</strong> Each problem has (a) an exam statement, (b) a solution outline, (c) a full solution. Attempt before revealing.</p>
+    <ol>
+      <li><strong>Count inversions</strong> of [2,3,8,6,1] and connect to insertion sort; give Θ(n log n) count.</li>
+      <li><strong>Prove MOM linear:</strong> 3n/10 split, T(n)≤T(n/5)+T(7n/10)+O(n).</li>
+      <li><strong>DAG shortest path</strong> in O(n+m) with topo order + one relax pass.</li>
+      <li><strong>Cut property ⇒ Kruskal</strong>; compute MST on a 5-edge example (cost 7).</li>
+      <li><strong>LCS table</strong> for ABCBDAB / BDCABA (answer 4) + two-row space.</li>
+      <li><strong>VC NP-complete</strong> via CLIQUE, k' = n−k on complement.</li>
+      <li><strong>Hash chaining</strong> α=0.6 expected search; Markov Pr[α≥4Eα]≤1/4; linear probe clustering at 0.9.</li>
+      <li><strong>Activity selection</strong> 4 jobs; exchange proof; earliest-start counterexample.</li>
+      <li><strong>FFT multiply</strong> (1+2x+3x²)(4+5x+6x²)=[4,13,28,27,18].</li>
+      <li><strong>Dijkstra settle proof</strong> with non-negativity and PQ invariant.</li>
+    </ol>
+    <p>Command: <code>set write write-insertion</code> for guided proof fields; see <code>src/curriculum/worked.js</code> for full text.</p>
+  `,
+
+  coverageMap: `
+    <p><strong>Curriculum coverage map (what mastery requires).</strong></p>
+    <ul>
+      <li><strong>Asymptotics:</strong> Θ, arithmetic, growth ranking, proof by definition.</li>
+      <li><strong>Recurrences:</strong> Master (3 cases), substitution, recursion tree, geometric series.</li>
+      <li><strong>Sorting:</strong> correctness invariants, stability, in-place, Ω(n log n) lower bound, counting/radix/bucket.</li>
+      <li><strong>Search/Select:</strong> binary invariant, quickselect, MOM linear proof.</li>
+      <li><strong>Structures:</strong> heap ops, BST/AVL/RB (insert-fixup cases), UF α(n), hash α and clustering, amortized methods.</li>
+      <li><strong>Graphs:</strong> BFS/DFS invariants, topo, SCC, Dijkstra proof, Bellman-Ford, Floyd, MST proofs, max-flow min-cut.</li>
+      <li><strong>DP:</strong> 5-step checklist, fib/coin/LCS/knap/rod/chain oracles.</li>
+      <li><strong>Greedy:</strong> exchange, matroids, Huffman WPL, fractional vs 0/1.</li>
+      <li><strong>D&C:</strong> Karatsuba, closest pair strip lemma, FFT.</li>
+      <li><strong>Strings:</strong> KMP lps, RK hash, Z, suffix array/tree.</li>
+      <li><strong>NP:</strong> P/NP/NPC, ≤_p, Cook chain, gadget construction, proofs both ways.</li>
+      <li><strong>Randomized:</strong> Las Vegas vs Monte Carlo, Freivalds, expectation.</li>
+    </ul>
+    <p>Every row has: lesson pack + mastery bank + at least one worked problem or proof-writing task.</p>
+  `,
 };
 
 /**
