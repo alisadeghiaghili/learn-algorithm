@@ -30,7 +30,7 @@ page.on('console', (msg) => {
   if (msg.type() === 'error') {
     const text = msg.text();
     // favicon / optional font CDNs are non-fatal
-    if (/favicon|fonts\.googleapis|fonts\.gstatic|ERR_FAILED|404/.test(text)) return;
+    if (/favicon|fonts\.googleapis|fonts\.gstatic|ERR_FAILED|ERR_NAME_NOT_RESOLVED|404/.test(text)) return;
     errors.push(text);
   }
 });

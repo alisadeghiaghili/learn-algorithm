@@ -587,7 +587,7 @@ export class App {
     this.dom.modalRoot.innerHTML =
       `<div class="modal" role="dialog" aria-label="Welcome">` +
       `<div class="modal-head"><div>` +
-      `<h2 class="modal-title">LearnAlgo</h2>` +
+      `<h2 class="modal-title">Learn<span class="brand-accent">Algo</span></h2>` +
       `<p class="modal-sub">An interactive algorithm visualization and tutorial</p>` +
       `</div></div>` +
       `<div class="side-body">` +
