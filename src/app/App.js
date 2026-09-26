@@ -55,7 +55,11 @@ export class App {
       extra: new ExtraViz(this.dom.stage),
     };
 
-    this.engine.onChange(() => this.render());
+    this.engine.onChange(() => {
+      this.render();
+      // win checks must run when animation reaches the end (play/step), not only after commands
+      if (this.level && !this._won) this.checkWin();
+    });
   }
 
   mount() {
@@ -252,6 +256,7 @@ export class App {
     this.level = level;
     this.moves = 0;
     this._won = false;
+    this.dom.stage?.querySelector('.win-overlay')?.remove();
     this.applySetup(level.setup);
     this.engine.resetFrames([]);
     this.engine.clearHistory();
@@ -539,36 +544,77 @@ export class App {
 
   showWin() {
     const lv = this.level;
+    if (!lv) return;
     const par = lv.par;
     const delta = this.moves - par;
     const verdict =
       delta < 0 ? 'under par — sharp' : delta === 0 ? 'on par' : `${delta} over par`;
-    const win = document.createElement('div');
-    win.className = 'win-banner';
-    win.innerHTML =
-      `<strong>Solved.</strong> ${escapeHtml(lv.name)} — ${this.moves} moves (par ${par}, ${verdict}).`;
-    this.dom.sideBody.appendChild(win);
 
-    this.log(`level solved · ${this.moves} moves · par ${par}`, 'ok');
-    this.toast('Level solved');
+    this.log('', 'out');
+    this.log('★ LEVEL SOLVED ★', 'ok');
+    this.log(`  ${lv.name} — ${this.moves} moves · par ${par} · ${verdict}`, 'ok');
+    this.toast(`★ Level solved — ${lv.name}`);
 
-    const actions = document.createElement('div');
-    actions.className = 'side-actions';
-    const again = document.createElement('button');
-    again.type = 'button';
-    again.className = 'btn';
-    again.textContent = 'retry';
-    again.addEventListener('click', () => {
-      this._won = false;
-      this.resetLevel();
-    });
-    const nextBtn = document.createElement('button');
-    nextBtn.type = 'button';
-    nextBtn.className = 'btn primary';
-    nextBtn.textContent = 'next level';
-    nextBtn.addEventListener('click', () => this.gotoNextLevel());
-    actions.append(again, nextBtn);
-    this.dom.sideBody.appendChild(actions);
+    const side = this.dom.sideBody;
+    if (side) {
+      const win = document.createElement('div');
+      win.className = 'win-banner';
+      win.innerHTML =
+        `<strong>★ Solved.</strong> ${escapeHtml(lv.name)} — ${this.moves} moves (par ${par}, ${verdict}).`;
+      side.appendChild(win);
+
+      const actions = document.createElement('div');
+      actions.className = 'side-actions';
+      const again = document.createElement('button');
+      again.type = 'button';
+      again.className = 'btn';
+      again.textContent = 'retry';
+      again.addEventListener('click', () => {
+        this._won = false;
+        this.dom.stage?.querySelector('.win-overlay')?.remove();
+        this.resetLevel();
+      });
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'btn primary';
+      nextBtn.textContent = 'next level';
+      nextBtn.addEventListener('click', () => this.gotoNextLevel());
+      actions.append(again, nextBtn);
+      side.appendChild(actions);
+    }
+
+    const stage = this.dom.stage;
+    if (stage) {
+      stage.querySelector('.win-overlay')?.remove();
+      const overlay = document.createElement('div');
+      overlay.className = 'win-overlay';
+      overlay.innerHTML =
+        `<div class="win-card">` +
+        `<div class="win-title">Level solved</div>` +
+        `<div class="win-sub">${escapeHtml(lv.name)}</div>` +
+        `<div class="win-meta">${this.moves} moves · par ${par} · ${verdict}</div>` +
+        `<div class="win-actions">` +
+        `<button type="button" class="btn" data-win="retry">retry</button>` +
+        `<button type="button" class="btn primary" data-win="next">next level</button>` +
+        `<button type="button" class="btn ghost" data-win="dismiss">dismiss</button>` +
+        `</div></div>`;
+      overlay.addEventListener('click', (e) => {
+        const b = e.target.closest?.('[data-win]');
+        if (!b) return;
+        const act = b.getAttribute('data-win');
+        if (act === 'retry') {
+          this._won = false;
+          overlay.remove();
+          this.resetLevel();
+        } else if (act === 'next') {
+          overlay.remove();
+          this.gotoNextLevel();
+        } else {
+          overlay.remove();
+        }
+      });
+      stage.appendChild(overlay);
+    }
   }
 
   gotoNextLevel() {
@@ -619,7 +665,7 @@ export class App {
     clearTimeout(this._toastTimer);
     this._toastTimer = setTimeout(() => {
       t.hidden = true;
-    }, 2200);
+    }, 3200);
   }
 
   render() {

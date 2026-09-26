@@ -73,6 +73,8 @@ await cmd('swap 1 2'); // 1,2,3
 await page.waitForTimeout(150);
 const win = await page.locator('.win-banner').count();
 if (!win) throw new Error('expected win banner after sorting intro-2');
+const overlay = await page.locator('.win-overlay').count();
+if (!overlay) throw new Error('expected win overlay after solving');
 
 // graph path
 await cmd('sandbox');
