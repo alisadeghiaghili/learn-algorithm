@@ -538,8 +538,8 @@ export class App {
       this.progress[this.level.id] = this.moves;
       saveProgress(this.progress);
     }
-    this.showWin();
     this.render();
+    this.showWin();
   }
 
   showWin() {
@@ -671,6 +671,9 @@ export class App {
   render() {
     const frame = this.engine.current();
     const kind = this.state.kind;
+    const stage = this.dom.stage;
+    // preserve win overlay across full stage redraws
+    const overlay = stage?.querySelector('.win-overlay') || null;
 
     const handled = frame?.extra?.kind ? this.viz.extra.render(frame, this.state) : false;
     if (!handled) {
@@ -684,6 +687,10 @@ export class App {
         target: this.state.target,
         graph: this.state.graph,
       });
+    }
+
+    if (overlay && stage && !stage.contains(overlay)) {
+      stage.appendChild(overlay);
     }
 
     const items = handled
